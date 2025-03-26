@@ -28,10 +28,6 @@ export default function Page() {
             <Grid.Col>
                 <div className="flex justify-between items-center">
                     <PageHeader>Droits utilisateurs</PageHeader>
-                    {/*<div className="flex gap-2">
-                        <QuerySearchBar />
-                        <Button href="/settings/users/create">Ajouter un utilisateur</Button>
-                    </div>*/}
 
                 </div>
             </Grid.Col>
