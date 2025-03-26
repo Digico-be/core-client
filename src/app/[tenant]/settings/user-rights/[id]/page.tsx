@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation'
 
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Grid, PageHeader, Table } from '@digico/ui'
 
 import { useAttachModule } from '../../../../../modules/module/hooks/module/useAttachModule'
@@ -11,6 +11,8 @@ import { useReadModulesForUser } from '../../../../../modules/module/hooks/modul
 import { useReadUser } from '../../../../../modules/module/hooks/user/useReadUser'
 
 import { LoadingQuery } from '@components/dashboard/LoadingQuery'
+import { BackButton } from '@components/dashboard/button'
+import { getTenantUrl } from '@digico/utils'
 
 export type ModuleType = {
     id: number
@@ -55,11 +57,12 @@ export default function UserModulesPage() {
     return (
         <Grid>
             <Grid.Col>
-                <PageHeader>
+                <PageHeader label="Retour" href={getTenantUrl('/settings/user-rights')}>
                     {userQuery.data
                         ? `Modules de ${userQuery.data.firstname} ${userQuery.data.lastname}`
                         : `Modules de l’utilisateur #${userId}`}
                 </PageHeader>
+
             </Grid.Col>
 
             <Grid.Col>

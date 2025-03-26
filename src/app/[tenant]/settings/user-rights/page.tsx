@@ -1,10 +1,8 @@
 'use client'
 
 import {
-    Button,
     Grid,
     PageHeader,
-    QuerySearchBar,
     useQueryParams
 } from '@digico/ui'
 import { UserTable } from 'modules/module/composant/UserTable'
