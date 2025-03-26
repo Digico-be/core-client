@@ -4,7 +4,6 @@ import {
     Button,
     Grid,
     PageHeader,
-    QuerySearchBar,
     useQueryParams
 } from '@digico/ui'
 import { UserTable } from 'modules/module/composant/UserTable'
@@ -29,8 +28,7 @@ export default function Page() {
                 <div className="flex justify-between items-center">
                     <PageHeader>Droits utilisateurs</PageHeader>
                     <div className="flex gap-2">
-                        {/*<QuerySearchBar />*/}
-                        <Button href="/settings/users/create">Ajouter un utilisateur</Button>
+                        <Button href="user-rights/create">Ajouter un utilisateur</Button>
                     </div>
 
                 </div>

@@ -3,5 +3,9 @@ export interface UserType {
     firstname: string
     lastname: string
     email: string
-    role?: string
+    role?: UserRole
 }
+
+export type UserRole = 'guest' | 'customer' | 'personnal' | 'admin'
+
+
