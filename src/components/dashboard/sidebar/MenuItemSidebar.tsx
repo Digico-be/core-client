@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 import clsx from 'clsx'
 
-import { Icon, IconName } from 'components/Icon'
+import { Icon, IconName } from '@components/Icon'
 
 type Props = {
     name: IconName
