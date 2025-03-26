@@ -1,6 +1,6 @@
 import { type SVGProps } from 'react'
 
-import { type IconName } from 'types/name'
+import { type IconName } from '../types/name'
 
 export { IconName }
 
