@@ -19,11 +19,6 @@ export default function Page() {
     const query = useReadUsers(queryParams)
     const result = query.data?.data
 
-    console.log('queryParams', queryParams)
-    console.log('result', result)
-
-
-
     return (
         <Grid>
             <Grid.Col>

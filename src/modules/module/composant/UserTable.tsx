@@ -2,7 +2,7 @@
 
 import { Table } from '@digico/ui'
 
-//import { useRouterWithTenant } from '@digico/utils'
+import { useRouterWithTenant } from '@digico/utils'
 import { UserType } from 'types/user.types'
 
 import { formatRole } from '../helper/formatRole'
@@ -13,10 +13,10 @@ type Props = {
 }
 
 export const UserTable = ({ items }: Props) => {
-    //const router = useRouterWithTenant()
+    const router = useRouterWithTenant()
 
     const toSingle = (user: UserType) => {
-        //router.push(`/settings/users/${user.id}`)
+        router.push(`/settings/user-rights/${user.id}`)
         console.log("Hello", user)
     }
 
