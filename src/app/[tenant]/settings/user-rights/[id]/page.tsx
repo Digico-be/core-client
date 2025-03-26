@@ -11,7 +11,6 @@ import { useReadModulesForUser } from '../../../../../modules/module/hooks/modul
 import { useReadUser } from '../../../../../modules/module/hooks/user/useReadUser'
 
 import { LoadingQuery } from '@components/dashboard/LoadingQuery'
-import { BackButton } from '@components/dashboard/button'
 import { getTenantUrl } from '@digico/utils'
 
 export type ModuleType = {
