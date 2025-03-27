@@ -13,7 +13,7 @@ export default async function RootLayout({
 
     return (
         <AuthProvider tenant={tenant} user={user}>
-            <DashboardLayout>{children}</DashboardLayout>
+            <DashboardLayout tenant={tenant.name}>{children}</DashboardLayout>
         </AuthProvider>
     )
 }
