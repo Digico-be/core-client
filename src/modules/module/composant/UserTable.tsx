@@ -28,7 +28,7 @@ export const UserTable = ({ items }: Props) => {
     }))
 
     const handleUpdateRight = (id: number) => {
-        router.push(`/settings/user-rights/${id}`)
+        router.push(`/settings/user-rights/${id}/right`)
     }
 
     const deleteUser = useDeleteUser()
@@ -72,6 +72,16 @@ export const UserTable = ({ items }: Props) => {
                                 Modifier les droits
                             </Button>
                         </DropdownMenu.Item>
+                        <DropdownMenu.Item>
+                            <Button
+                                className="w-full"
+                                intent="default"
+                                onClick={() => router.push(`/settings/user-rights/${row.id}/edit`)}
+                            >
+                                Modifier l’utilisateur
+                            </Button>
+                        </DropdownMenu.Item>
+
                         <DropdownMenu.Item>
                             <Button
                                 className="w-full"

@@ -4,11 +4,12 @@ import { useParams } from 'next/navigation'
 
 import { useEffect, useState } from 'react'
 import { Grid, PageHeader, Table } from '@digico/ui'
+import { getTenantUrl } from '@digico/utils'
 
-import { useAttachModule } from '../../../../../modules/module/hooks/module/useAttachModule'
-import { useDetachModule } from '../../../../../modules/module/hooks/module/useDetachModule'
-import { useReadModulesForUser } from '../../../../../modules/module/hooks/module/useReadModuleForUser'
-import { useReadUser } from '../../../../../modules/module/hooks/user/useReadUser'
+import { useAttachModule } from '../../../../../../modules/module/hooks/module/useAttachModule'
+import { useDetachModule } from '../../../../../../modules/module/hooks/module/useDetachModule'
+import { useReadModulesForUser } from '../../../../../../modules/module/hooks/module/useReadModuleForUser'
+import { useReadUser } from '../../../../../../modules/module/hooks/user/useReadUser'
 
 import { LoadingQuery } from '@components/dashboard/LoadingQuery'
 
@@ -55,7 +56,7 @@ export default function UserModulesPage() {
     return (
         <Grid>
             <Grid.Col>
-                <PageHeader>
+                <PageHeader label="Retour" href={getTenantUrl('/settings/user-rights')}>
                     {userQuery.data
                         ? `Modules de ${userQuery.data.firstname} ${userQuery.data.lastname}`
                         : `Modules de l’utilisateur #${userId}`}
