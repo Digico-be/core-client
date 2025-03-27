@@ -8,7 +8,7 @@ import { toast } from 'sonner'
 import { useDestroyCreditNoteItem, useUpdateCreditNoteItem } from '@billing/credit-note/hooks/mutations'
 import { BillingItemType } from '@billing/billing-item/types/BillingItem'
 
-import { Icon } from 'components/Icon'
+import { Icon } from '@components/Icon'
 
 import { Modal } from '../Modal'
 
