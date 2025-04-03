@@ -1,6 +1,7 @@
 'use client'
 
 import {
+    Button,
     Grid,
     PageHeader,
     useQueryParams
@@ -26,7 +27,9 @@ export default function Page() {
             <Grid.Col>
                 <div className="flex justify-between items-center">
                     <PageHeader>Droits utilisateurs</PageHeader>
-
+                    <div className="flex gap-2">
+                        <Button href="user-rights/create">Ajouter un utilisateur</Button>
+                    </div>
                 </div>
             </Grid.Col>
 
