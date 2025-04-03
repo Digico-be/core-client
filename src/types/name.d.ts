@@ -2,8 +2,10 @@
  
 export type IconName =
 	| "app"
+	| "arrow"
 	| "billing"
 	| "contact"
+	| "dots-vertical"
 	| "edit"
 	| "logout"
 	| "search"

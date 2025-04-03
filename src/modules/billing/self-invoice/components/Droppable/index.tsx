@@ -14,7 +14,7 @@ import {
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import { SortableContext, SortingStrategy, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 
-import { Icon } from 'components/Icon'
+import { Icon } from '@components/Icon'
 
 interface DndContainerProps {
     announcements?: Announcements
