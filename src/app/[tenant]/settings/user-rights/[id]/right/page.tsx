@@ -24,6 +24,7 @@ export default function UserModulesPage() {
     const userId = Number(id)
 
     const modulesQuery = useReadModulesForUser(userId)
+    console.log('modulesQuery', modulesQuery.data)
     const attachModuleMutation = useAttachModule()
     const detachModuleMutation = useDetachModule()
     const userQuery = useReadUser(userId)

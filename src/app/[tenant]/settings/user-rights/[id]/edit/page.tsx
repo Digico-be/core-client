@@ -19,23 +19,18 @@ export default function EditUserPage() {
     const userId = Number(id)
 
     const { data: user } = useReadUser(userId)
+
     const updateUser = useUpdateUser()
     type UserFormType = UserType & { password?: string }
 
-    const form = useForm<UserFormType>({
-        defaultValues: user,
-    })
-
+    const form = useForm<UserFormType>()
 
     useEffect(() => {
-        if (user) {
-            form.reset({
-                ...user,
-                password: '',
-            })
+        if ((user as any)?.data) {
+            const userData = { ...(user as any).data, password: '' }
+            form.reset(userData)
         }
     }, [user])
-
 
     const handleSubmit = (data: UserFormType) => {
         const { password, ...rest } = data
@@ -43,11 +38,11 @@ export default function EditUserPage() {
         updateUser.mutate(
             {
                 id: userId,
-                data: password ? { ...rest, password } : rest, // n'envoie pas password s'il est vide
+                data: password ? { ...rest, password } : rest // n'envoie pas password s'il est vide
             },
             {
                 onSuccess: () => toast.success('Utilisateur mis à jour avec succès'),
-                onError: () => toast.error('Erreur lors de la mise à jour'),
+                onError: () => toast.error('Erreur lors de la mise à jour')
             }
         )
     }
