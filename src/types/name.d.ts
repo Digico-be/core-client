@@ -5,6 +5,7 @@ export type IconName =
 	| "arrow"
 	| "billing"
 	| "contact"
+	| "dots-vertical"
 	| "edit"
 	| "logout"
 	| "search"
