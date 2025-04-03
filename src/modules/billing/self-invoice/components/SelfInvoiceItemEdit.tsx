@@ -8,7 +8,7 @@ import { toast } from 'sonner'
 import { useDestroySelfInvoiceItem, useUpdateSelfInvoiceItem } from '../hooks/mutations/item'
 import { BillingItemType } from '@billing/billing-item/types/BillingItem'
 
-import { Icon } from 'components/Icon'
+import { Icon } from '@components/Icon'
 
 import { Modal } from './Modal'
 

@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 
 import { useLogout } from 'hooks/mutations/auth/useLogout'
 
-import { Icon } from 'components/Icon'
+import { Icon } from '@components/Icon'
 
 export const ButtonLogout = () => {
     const router = useRouter()

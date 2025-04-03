@@ -26,7 +26,7 @@ export async function middleware(request: NextRequest) {
 
     try {
         await getAuthenticatedUser(tenant)
-    } catch {
+    } catch{
         return NextResponse.redirect(new URL('/login', request.url))
     }
 
