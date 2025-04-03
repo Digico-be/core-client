@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation'
 
 import React, { useEffect, useState } from 'react'
 import { Grid, PageHeader, Table } from '@digico/ui'
+import { getTenantUrl } from '@digico/utils'
 
 import { useAttachModule } from '../../../../../modules/module/hooks/module/useAttachModule'
 import { useDetachModule } from '../../../../../modules/module/hooks/module/useDetachModule'
@@ -11,7 +12,6 @@ import { useReadModulesForUser } from '../../../../../modules/module/hooks/modul
 import { useReadUser } from '../../../../../modules/module/hooks/user/useReadUser'
 
 import { LoadingQuery } from '@components/dashboard/LoadingQuery'
-import { getTenantUrl } from '@digico/utils'
 
 export type ModuleType = {
     id: number

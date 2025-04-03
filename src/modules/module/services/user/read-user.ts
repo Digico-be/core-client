@@ -1,4 +1,4 @@
-import { UserType } from 'types/user.types'
+import { UserType } from '../../../../types/user.types'
 
 import { HttpService } from './index'
 
