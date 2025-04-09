@@ -5,3 +5,4 @@ export const HttpService = new HttpRequestBuilder(String(process.env.NEXT_PUBLIC
 export * from './getAuthenticatedUser'
 export * from './login'
 export * from './logout'
+export * from './resetPassword'

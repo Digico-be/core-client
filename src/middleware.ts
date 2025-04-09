@@ -5,6 +5,11 @@ import { getAuthenticatedUser } from 'services/auth/getAuthenticatedUser'
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl
 
+    // Si la requête concerne la réinitialisation du mot de passe, ne rien faire
+    if (pathname.startsWith('/reset-password')) {
+        return NextResponse.next()
+    }
+
     const access_token = request.cookies.get('Authorization')?.value
 
     if (!access_token) {
