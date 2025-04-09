@@ -1,33 +1,38 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 
-import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react'
+import React from 'react'
+import { SubmitHandler, useForm } from 'react-hook-form'
+import { Button, Form } from '@digico/ui'
 import { toast } from 'sonner'
 
 import { useResetPassword } from '../../hooks/mutations/auth/useResetPassword'
+
+interface ResetPasswordFormData {
+    email: string
+    password: string
+    passwordConfirmation: string
+}
 
 const ResetPassword: React.FC = () => {
     const searchParams = useSearchParams()
     const router = useRouter()
 
-    const [mounted, setMounted] = useState<boolean>(false)
-    useEffect(() => {
-        setMounted(true)
-    }, [])
-
     const token: string | null = searchParams.get('token')
     const emailFromQuery: string = searchParams.get('email') || ''
 
-    const [email, setEmail] = useState<string>(emailFromQuery)
-    const [password, setPassword] = useState<string>('')
-    const [passwordConfirmation, setPasswordConfirmation] = useState<string>('')
-    const [errors, setErrors] = useState<Record<string, string[]>>({})
+    // Initialisation du formulaire avec react-hook-form
+    const form = useForm<ResetPasswordFormData>({
+        defaultValues: {
+            email: emailFromQuery,
+            password: '',
+            passwordConfirmation: '',
+        },
+    })
 
     const resetPasswordMutation = useResetPassword()
 
-    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-        e.preventDefault()
-        setErrors({})
-
+    // Définition de la fonction de soumission
+    const onSubmit: SubmitHandler<ResetPasswordFormData> = (data) => {
         if (!token) {
             toast.error("Aucun token n'est présent dans l'URL")
             return
@@ -35,109 +40,88 @@ const ResetPassword: React.FC = () => {
 
         const payload = {
             token,
-            email,
-            password,
-            password_confirmation: passwordConfirmation,
+            email: data.email,
+            password: data.password,
+            password_confirmation: data.passwordConfirmation,
         }
 
         resetPasswordMutation.mutate(payload, {
-            onSuccess: (data: any) => {
-                toast.success(data.message || 'Mot de passe réinitialisé avec succès.');
-                router.push('/login');
+            onSuccess: (response: any) => {
+                toast.success(response.message || 'Mot de passe réinitialisé avec succès.')
+                router.push('/login')
             },
             onError: (error: any) => {
-                console.error("Erreur pendant la réinitialisation :", error);
-
-                // Utiliser error.response.data s'il existe, sinon utiliser error directement.
-                const errorData = error?.response?.data || error;
-                console.log("Détail de la réponse:", errorData);
-
-                const responseErrors = errorData?.errors;
+                const errorData = error?.response?.data || error
+                const responseErrors = errorData?.errors
                 if (responseErrors && Object.keys(responseErrors).length > 0) {
-                    // Extraction des messages d'erreur
-                    const messages: string[] = [];
+                    const messages: string[] = []
                     Object.values(responseErrors).forEach((msgs: any) => {
-                        messages.push(...msgs);
-                    });
-                    // Affichage dans le toast des messages détaillés
-                    toast.error(messages.join(" - "));
-                    // Optionnel : stocker les erreurs dans le state pour affichage dans le composant
-                    setErrors(responseErrors);
+                        messages.push(...msgs)
+                    })
+                    toast.error(messages.join(" - "))
                 } else if (errorData?.message) {
-                    // On affiche le message global s'il n'y a pas d'erreurs détaillées
-                    toast.error(errorData.message);
+                    toast.error(errorData.message)
                 } else {
-                    toast.error(error?.message || 'Erreur pendant la réinitialisation.');
+                    toast.error(error?.message || 'Erreur pendant la réinitialisation.')
                 }
-            }
-
-
-
-        });
-
+            },
+        })
     }
 
-    if (!mounted) return null
+    // Wrapper pour gérer l'événement de soumission
+    const handleFormSubmit = (e: any) => {
+        if (e && typeof e.preventDefault === 'function') {
+            e.preventDefault();
+        }
+        form.handleSubmit(onSubmit)();
+    }
+
+
+    // Si aucun token n'est présent dans l'URL, on affiche un message d'erreur.
     if (!token) {
         return (
-            <div>
-                <h2>Erreur</h2>
+            <div className="max-w-md mx-auto p-6">
+                <h2 className="text-xl font-bold">Erreur</h2>
                 <p>Aucun token de réinitialisation a été trouvé dans URL.</p>
             </div>
         )
     }
 
     return (
-        <div className="reset-password-container" style={{ maxWidth: '400px', margin: '0 auto', padding: '20px' }}>
-            <h2>Réinitialiser le mot de passe</h2>
-            {Object.keys(errors).length > 0 && (
-                <div style={{ marginBottom: '1rem', color: 'red' }}>
-                    {Object.values(errors).flat().map((message, index) => (
-                        <div key={index} style={{ color: 'red', marginBottom: '0.5rem' }}>
-                            {message}
-                        </div>
-                    ))}
-
-                </div>
-            )}
-            <form onSubmit={handleSubmit}>
-                <div style={{ marginBottom: '1rem' }}>
-                    <label htmlFor="email">Adresse email :</label>
-                    <input
+        <div className="max-w-md mx-auto p-6">
+            <h2 className="text-2xl font-semibold text-center mb-4">Réinitialiser le mot de passe</h2>
+            <Form useForm={form} onSubmit={handleFormSubmit}>
+                <Form.Group>
+                    <Form.Field
                         type="email"
                         id="email"
-                        value={email}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                        required
-                        style={{ width: '100%', padding: '8px' }}
+                        name="email"
+                        label="Adresse email"
+                        placeholder="Entrez votre email"
                     />
-                </div>
-                <div style={{ marginBottom: '1rem' }}>
-                    <label htmlFor="password">Nouveau mot de passe :</label>
-                    <input
+                    <Form.Field
                         type="password"
                         id="password"
-                        value={password}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-                        required
-                        style={{ width: '100%', padding: '8px' }}
+                        name="password"
+                        label="Nouveau mot de passe"
+                        placeholder="Nouveau mot de passe"
                     />
-                </div>
-                <div style={{ marginBottom: '1rem' }}>
-                    <label htmlFor="passwordConfirmation">Confirmer le mot de passe :</label>
-                    <input
+                    <Form.Field
                         type="password"
                         id="passwordConfirmation"
-                        value={passwordConfirmation}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) => setPasswordConfirmation(e.target.value)}
-                        required
-                        style={{ width: '100%', padding: '8px' }}
+                        name="passwordConfirmation"
+                        label="Confirmer le mot de passe"
+                        placeholder="Confirmer le mot de passe"
                     />
-                </div>
-                <button type="submit" style={{ padding: '10px 20px', cursor: 'pointer' }}>
-                    Réinitialiser
-                </button>
-            </form>
+                    <Button
+                        isLoading={resetPasswordMutation.status === 'pending'}
+                        type="submit"
+                        className="w-full"
+                    >
+                        Réinitialiser
+                    </Button>
+                </Form.Group>
+            </Form>
         </div>
     )
 }
