@@ -8,7 +8,6 @@ import ResetPassword from 'components/auth/ResetPassword'
 export default function ResetPasswordPage() {
     return (
         <div className="h-screen flex">
-            {/* Partie visuelle (background) */}
             <div className="w-full max-mobile:hidden relative before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-primary/80">
                 <ImageBuilder
                     className="w-full h-full object-cover object-center"
@@ -16,7 +15,6 @@ export default function ResetPasswordPage() {
                 />
             </div>
 
-            {/* Contenu principal : Titre et composant ResetPassword */}
             <div className="w-[52rem] max-mobile:w-full flex flex-col gap-20 items-center justify-center flex-shrink-0 p-20 max-mobile:p-12">
                 <div className="flex flex-col items-center">
                     <h1 className="text-2xl font-bold text-primary">Diji</h1>

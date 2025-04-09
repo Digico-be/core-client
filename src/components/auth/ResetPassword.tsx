@@ -1,8 +1,7 @@
-'use client'
-
-import { useRouter,useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
 import { useResetPassword } from '../../hooks/mutations/auth/useResetPassword'
 
@@ -21,19 +20,17 @@ const ResetPassword: React.FC = () => {
     const [email, setEmail] = useState<string>(emailFromQuery)
     const [password, setPassword] = useState<string>('')
     const [passwordConfirmation, setPasswordConfirmation] = useState<string>('')
-    const [message, setMessage] = useState<string>('')
-    const [errors, setErrors] = useState<string[]>([])
+    const [errors, setErrors] = useState<Record<string, string[]>>({})
 
     const resetPasswordMutation = useResetPassword()
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        setErrors([])
-        setMessage('')
+        setErrors({})
 
         if (!token) {
-            setErrors(["Aucun token n'est présent dans l'URL"])
-            return;
+            toast.error("Aucun token n'est présent dans l'URL")
+            return
         }
 
         const payload = {
@@ -45,37 +42,46 @@ const ResetPassword: React.FC = () => {
 
         resetPasswordMutation.mutate(payload, {
             onSuccess: (data: any) => {
-                setMessage(data.message || 'Mot de passe réinitialisé avec succès.')
-                router.push('/login')
+                toast.success(data.message || 'Mot de passe réinitialisé avec succès.');
+                router.push('/login');
             },
             onError: (error: any) => {
                 console.error("Erreur pendant la réinitialisation :", error);
 
-                // Aplatir les erreurs si elles existent
-                const responseErrors = error?.response?.data?.errors;
-                let errorMessages: string[] = [];
-                if (responseErrors) {
-                    // Object.values renvoie un tableau avec les valeurs (qui sont aussi des tableaux), on les aplatit ensuite.
-                    // @ts-ignore
-                    errorMessages = Object.values(responseErrors).flat();
-                } else if (error?.response?.data?.message) {
-                    errorMessages = [error.response.data.message];
-                } else {
-                    errorMessages = [error?.message || 'Erreur pendant la réinitialisation.'];
-                }
-                setErrors(errorMessages);
-            },
-        });
+                // Utiliser error.response.data s'il existe, sinon utiliser error directement.
+                const errorData = error?.response?.data || error;
+                console.log("Détail de la réponse:", errorData);
 
+                const responseErrors = errorData?.errors;
+                if (responseErrors && Object.keys(responseErrors).length > 0) {
+                    // Extraction des messages d'erreur
+                    const messages: string[] = [];
+                    Object.values(responseErrors).forEach((msgs: any) => {
+                        messages.push(...msgs);
+                    });
+                    // Affichage dans le toast des messages détaillés
+                    toast.error(messages.join(" - "));
+                    // Optionnel : stocker les erreurs dans le state pour affichage dans le composant
+                    setErrors(responseErrors);
+                } else if (errorData?.message) {
+                    // On affiche le message global s'il n'y a pas d'erreurs détaillées
+                    toast.error(errorData.message);
+                } else {
+                    toast.error(error?.message || 'Erreur pendant la réinitialisation.');
+                }
+            }
+
+
+
+        });
 
     }
 
     if (!mounted) return null
-
     if (!token) {
         return (
             <div>
-                <h2>Load failed</h2>
+                <h2>Erreur</h2>
                 <p>Aucun token de réinitialisation a été trouvé dans URL.</p>
             </div>
         )
@@ -84,13 +90,15 @@ const ResetPassword: React.FC = () => {
     return (
         <div className="reset-password-container" style={{ maxWidth: '400px', margin: '0 auto', padding: '20px' }}>
             <h2>Réinitialiser le mot de passe</h2>
-            {message && <div style={{ color: 'green', marginBottom: '1rem' }}>{message}</div>}
-            {errors.length > 0 && (
-                <ul style={{ color: 'red', marginBottom: '1rem' }}>
-                    {errors.map((error, index) => (
-                        <li key={index}>{error}</li>
+            {Object.keys(errors).length > 0 && (
+                <div style={{ marginBottom: '1rem', color: 'red' }}>
+                    {Object.values(errors).flat().map((message, index) => (
+                        <div key={index} style={{ color: 'red', marginBottom: '0.5rem' }}>
+                            {message}
+                        </div>
                     ))}
-                </ul>
+
+                </div>
             )}
             <form onSubmit={handleSubmit}>
                 <div style={{ marginBottom: '1rem' }}>
