@@ -14,3 +14,10 @@ export interface AuthResponse {
     user: UserType
     tenant: TenantType
 }
+
+export interface ResetPasswordFormData {
+    token: string;
+    email: string;
+    password: string;
+    password_confirmation: string;
+}
