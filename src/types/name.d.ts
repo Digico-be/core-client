@@ -5,6 +5,7 @@ export type IconName =
 	| "billing"
 	| "contact"
 	| "edit"
+	| "ia"
 	| "logout"
 	| "search"
 	| "settings"

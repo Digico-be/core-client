@@ -17,6 +17,9 @@ export const MenuSidebar = () => {
 
                 <MenuItemSidebar name={'billing'} href={getTenantUrl('/billing/invoice')} />
 
+                <MenuItemSidebar name={'ia'} href={getTenantUrl('/ia')} />
+
+
                 <li className="mt-auto flex flex-col">
                     <ButtonSettings />
                     <ButtonLogout />

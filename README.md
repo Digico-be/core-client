@@ -34,3 +34,18 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+# Add Chat bot module 
+Ajouter dans le point env
+Copier coller le module dans modules 
+Dnas [tenant] ajouter le dossier ia avec la page
+ajouter dans MenuSidebar.tsx dans les composants un lien vers la page 
+dans le dossier types ajouter dans name.d.ts le nom du svg 
+ajouter le svg dans le dossier public/icons
+npm run build:icons
+
+Fix les imports
+dependance : 
+uuid
+import ReactMarkdown from 'react-markdown'
+import rehypeRaw from 'rehype-raw'
