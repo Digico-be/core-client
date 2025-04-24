@@ -41,11 +41,6 @@ export const useChatThread = (
         input: string | ThreadMessageContent[],
         attachments?: string[]
     ) => {
-        console.debug('📨 [useChatThread] sendMessage déclenché avec :', {
-            input,
-            attachments,
-        });
-
         if (!thread?.id) return;
 
         setStreamedResponse('');
@@ -61,7 +56,6 @@ export const useChatThread = (
             'user',
             attachments
         );
-        console.debug('✅ [useChatThread] Message utilisateur envoyé :', userRes);
 
         const userMessage: Message = {
             id: userRes.id,
@@ -94,13 +88,10 @@ export const useChatThread = (
             let fullResponse = '';
 
             const textToUse = content.find((item) => item.type === 'text')?.text ?? '';
-            console.debug('🔁 [useChatThread] Début streaming avec :', textToUse);
 
             fullResponse = await StreamService.startStreamingResponse(
                 textToUse,
                 (token) => {
-                    console.debug('🔤 [Streaming] Token reçu :', token);
-
                     if (first) {
                         setMessages((prev) => prev.filter((m) => m.id !== 'thinking'));
                         first = false;
@@ -110,7 +101,6 @@ export const useChatThread = (
                 workspaceSlug,
                 (name, args) => console.log('🛠️ Function call', name, args)
             );
-            console.log('✅ fullResponse final:', fullResponse);
 
             // Protection ici : ne pas envoyer une réponse vide
             if (fullResponse.trim().length > 0) {
@@ -138,7 +128,6 @@ export const useChatThread = (
 
 
             setStreamedResponse('');
-            console.debug('🏁 [useChatThread] Streaming terminé, réponse complète :', fullResponse);
 
             return;
         }

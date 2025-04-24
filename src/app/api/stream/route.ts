@@ -9,8 +9,6 @@ export async function POST(req: Request) {
         const agent = await createLangChainAgent(workspace);
         const result = await agent.invoke({ input: message });
 
-        console.log("🧠 Résultat agent :", result);
-
         // ✅ On crée un vrai flux streaming avec la réponse complète
         const stream = new ReadableStream({
             start(controller) {

@@ -13,6 +13,9 @@ export const handleToolCall = async (
 ): Promise<any> => {
     const args = JSON.parse(rawArgs);
 
+    console.debug("🔍 [handleToolCall] Appel de fonction :", functionName);
+    console.debug("📦 [handleToolCall] Arguments bruts :", args);
+
     const found = functionsDefinition.find(
         (fn) => fn.function.name === functionName
     );
@@ -33,6 +36,8 @@ export const handleToolCall = async (
             endpoint = endpoint.replace(`{${key}}`, value);
         }
     });
+
+    console.debug("🔗 [handleToolCall] Endpoint final appelé :", endpoint);
 
     return await fetchLaravelData(endpoint, workspace);
 };

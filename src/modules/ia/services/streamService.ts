@@ -7,6 +7,7 @@ export const StreamService = {
         workspace: string,
         onFunctionCall?: (name: string, args: string) => void
     ): Promise<string> => {
+        console.log("Token : ")
         const reader = await StreamApiHelper.streamMessageToAssistant(message, workspace);
         const decoder = new TextDecoder();
         let fullResponse = '';
@@ -22,8 +23,6 @@ export const StreamService = {
 
             for (const line of lines) {
                 try {
-                    console.debug('📥 [StreamService] Ligne brute reçue :', line);
-
                     const parsed = JSON.parse(line);
 
                     if (parsed.type === "token") {

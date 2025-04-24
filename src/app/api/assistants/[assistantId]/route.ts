@@ -15,7 +15,7 @@ const openai = new OpenAI({
 
 // DELETE
 export async function DELETE(req: NextRequest, context: any) {
-    const assistantId = context.params.assistantId;
+    const { assistantId } = await context.params;
 
     try {
         await openai.beta.assistants.del(assistantId);
@@ -31,7 +31,7 @@ export async function DELETE(req: NextRequest, context: any) {
 
 // GET
 export async function GET(req: NextRequest, context: any) {
-    const assistantId = context.params.assistantId;
+    const { assistantId } = await context.params;
 
     try {
         const assistant = await openai.beta.assistants.retrieve(assistantId);

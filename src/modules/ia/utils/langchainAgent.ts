@@ -20,7 +20,7 @@ export const createLangChainAgent = async (workspace: string) => {
             description: fn.function.description,
             schema: fn.function.parameters as any,
             func: async (args) => {
-                console.debug('🛠️ [LangChainAgent] Fonction appelée :', fn.function.name, args);
+                console.debug('🛠️ [LangChainAgent] Fonction GPT appelée :', fn.function.name, args);
 
                 const result = await handleToolCall(fn.function.name, JSON.stringify(args), workspace);
 

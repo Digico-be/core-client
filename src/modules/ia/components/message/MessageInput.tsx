@@ -14,8 +14,6 @@ import FileDropZone from '../file/FileDropZone'
 
 import MessageList from './MessageList'
 
-
-
 interface MessageInputProps {
     module: string
     assistantId: string
@@ -23,7 +21,7 @@ interface MessageInputProps {
 }
 
 const MessageInput: React.FC<MessageInputProps> = ({ module, assistantId, tabId }) => {
-    const { tenant } = useAuth() //TODO : Risque de problème
+    const { tenant } = useAuth()
     const { uploadFile } = useFileUpload()
     const [userQuery, setUserQuery] = useState('')
     const scrollRef = React.useRef<HTMLDivElement>(null)
