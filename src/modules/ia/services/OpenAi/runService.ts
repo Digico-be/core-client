@@ -1,4 +1,4 @@
-import { cancelRun,createRun, getRunStatus } from '../helpers/api/runApiHelper';
+import { cancelRun,createRun, getRunStatus } from '../../helpers/api/runApiHelper';
 
 export class RunService {
     /**

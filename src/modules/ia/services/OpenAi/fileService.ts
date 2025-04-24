@@ -1,5 +1,5 @@
-import { uploadFileToOpenAI } from '../helpers/api/fileApiHelper'
-import { IAFile } from '../models/file'
+import { uploadFileToOpenAI } from '../../helpers/api/fileApiHelper'
+import { IAFile } from '../../models/file'
 
 export class FileService {
     static async upload(file: File): Promise<IAFile | null> {

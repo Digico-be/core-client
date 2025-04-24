@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import { ThreadService } from '../services/threadService'
+import { ThreadService } from '../services/OpenAi/threadService'
 
 import { Message } from '../models/message'
 

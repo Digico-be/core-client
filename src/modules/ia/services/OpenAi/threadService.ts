@@ -4,9 +4,9 @@ import {
     editMessageInThread,
     getMessagesFromThread,
     sendStructuredMessageToThread
-} from '../helpers/api/threadApiHelper';
-import { ThreadMessageContent } from '../models/thread'
-import { sanitizeThreadContent } from '../utils/threadUtils'
+} from '../../helpers/api/threadApiHelper';
+import { ThreadMessageContent } from '../../models/thread'
+import { sanitizeThreadContent } from '../../utils/threadUtils'
 
 
 

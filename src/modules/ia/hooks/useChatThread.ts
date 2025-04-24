@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 
-import { RunService } from '../services/runService'
-import { StreamService } from '../services/streamService'
-import { ThreadService } from '../services/threadService'
+import { RunService } from '../services/OpenAi/runService'
+import { StreamService } from '../services/OpenAi/streamService'
+import { ThreadService } from '../services/OpenAi/threadService'
 
 import { Message } from '../models/message'
 import { Thread, ThreadMessageContent } from '../models/thread'

@@ -3,7 +3,7 @@
 import React, {useEffect, useRef, useState} from 'react'
 import { v4 as uuidv4 } from 'uuid'
 
-import { AssistantService } from '../../services/assistantService'
+import { AssistantService } from '../../services/OpenAi/assistantService'
 import { useAssistantTabs } from '../../hooks/useAssistantTabs'
 
 import { AssistantTab } from '../../models/assistantTab'

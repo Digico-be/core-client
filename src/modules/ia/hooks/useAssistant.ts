@@ -1,7 +1,7 @@
 import {useState} from "react";
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { AssistantService } from '../services/assistantService'
+import { AssistantService } from '../services/OpenAi/assistantService'
 
 import { SessionStorage } from '../utils/sessions'
 

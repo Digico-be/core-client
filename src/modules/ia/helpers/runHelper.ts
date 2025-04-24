@@ -1,5 +1,5 @@
-import { RunService } from '../services/runService'
-import { ThreadService } from '../services/threadService'
+import { RunService } from '../services/OpenAi/runService'
+import { ThreadService } from '../services/OpenAi/threadService'
 
 import { Message } from '../models/message'
 

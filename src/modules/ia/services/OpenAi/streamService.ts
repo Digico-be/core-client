@@ -1,4 +1,4 @@
-import { StreamApiHelper } from '../helpers/api/streamApiHelper'
+import { StreamApiHelper } from '../../helpers/api/streamApiHelper'
 
 export const StreamService = {
     startStreamingResponse: async (

@@ -1,6 +1,6 @@
-import { functionsDefinition } from '../functions/functionsDefinition'
-import { createAssistant, deleteAssistant, getAssistantById } from '../helpers/api/assistantApiHelper'
-import { Assistant } from '../models/assistant'
+import { functionsDefinition } from '../../functions/functionsDefinition'
+import { createAssistant, deleteAssistant, getAssistantById } from '../../helpers/api/assistantApiHelper'
+import { Assistant } from '../../models/assistant'
 
 
 /**

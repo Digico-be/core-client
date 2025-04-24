@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import { FileService } from '../services/fileService'
+import { FileService } from '../services/OpenAi/fileService'
 
 import { IAFile } from '../models/file'
 
