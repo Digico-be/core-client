@@ -3,7 +3,7 @@
 import React, {useEffect, useRef, useState} from 'react'
 import { v4 as uuidv4 } from 'uuid'
 
-import { destroyAssistant } from '../../services'
+import { destroyAssistant } from '../../services/assistant'
 import { AssistantService } from '../../services/OpenAi/assistantService'
 import { useAssistantTabs } from '../../hooks/useAssistantTabs'
 
@@ -105,10 +105,10 @@ const AssistantTabs: React.FC<AssistantTabsProps> = ({ type }) => {
 
         if (assistantId) {
             try {
-                // 🧠 1. Supprimer chez OpenAI
+                // Supprimer OpenAI
                 await AssistantService.deleteAssistant(assistantId);
 
-                // 🧠 2. Supprimer dans ta DB Laravel
+                // Supprimer DB Laravel
                 await destroyAssistant(assistantId);
             } catch (err) {
                 console.error('Erreur suppression assistant :', err)

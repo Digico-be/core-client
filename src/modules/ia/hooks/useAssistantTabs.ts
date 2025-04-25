@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-import { readAssistants } from '../services'
+import { readAssistants } from '../services/assistant'
 
 import { AssistantTab } from '../models/assistantTab'
 

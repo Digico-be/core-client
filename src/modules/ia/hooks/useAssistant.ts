@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { createAssistant, destroyAssistant, readAssistant } from '../services';
+import { createAssistant, destroyAssistant, readAssistant } from '../services/assistant';
 import { AssistantService } from '../services/OpenAi/assistantService';
+import { destroyThread } from '../services/thread';
 
 import { Assistant } from '../models/assistant';
 import { SessionStorage } from '../utils/sessions';
@@ -63,7 +64,20 @@ export const useAssistant = (module: string, tabId: string) => {
     const deleteMutation = useMutation({
         mutationFn: async () => {
             if (!assistantOpenAiId) return;
+
+            // 💥 D'abord on supprime l'assistant OpenAI
             await destroyAssistant(assistantOpenAiId);
+
+            // 🧼 Ensuite on supprime le thread Laravel lié
+            const threadId = SessionStorage.getThreadIdForTab(tabId);
+            if (threadId) {
+                try {
+                    await destroyThread(threadId);
+                } catch (err) {
+                    console.warn("⚠️ Erreur suppression du thread:", err);
+                }
+                SessionStorage.removeThreadIdForTab(tabId);
+            }
         },
         onSuccess: () => {
             SessionStorage.removeAssistantOpenAiIdForTab(tabId);

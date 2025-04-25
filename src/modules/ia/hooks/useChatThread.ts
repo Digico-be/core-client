@@ -1,14 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState }   from 'react';
 
 import { RunService } from '../services/OpenAi/runService'
 import { StreamService } from '../services/OpenAi/streamService'
 import { ThreadService } from '../services/OpenAi/threadService'
+import { createThread, readThread } from '../services/thread';
 
 import { Message } from '../models/message'
 import { Thread, ThreadMessageContent } from '../models/thread'
 import { SessionStorage } from '../utils/sessions'
 
 import { useThreadMessages } from './useThreadMessages'
+
+type LaravelThread = {
+    openai_id: string;
+    assistant_openai_id: string;
+    module?: string;
+    created_at: string;
+};
 
 export const useChatThread = (
     tabId: string,
@@ -22,18 +30,34 @@ export const useChatThread = (
     const { messages, setMessages, loadMessages, deleteMessage, editMessage } = useThreadMessages();
 
     const initThread = async () => {
-        const existingId = SessionStorage.getThreadIdForTab(tabId);
-        if (existingId) {
-            setThread({
-                id: existingId,
-                assistantId,
-                createdAt: new Date().toISOString(),
-            });
-            await loadMessages(existingId);
+        const existingOpenAiId = SessionStorage.getThreadIdForTab(tabId);
+
+        if (existingOpenAiId) {
+            const response = await readThread(existingOpenAiId);
+
+            const threadFromLaravel = response.data as unknown as LaravelThread;
+
+            const formattedThread: Thread = {
+                id: threadFromLaravel.openai_id,
+                assistantId: threadFromLaravel.assistant_openai_id,
+                module: threadFromLaravel.module,
+                createdAt: threadFromLaravel.created_at,
+            };
+
+            setThread(formattedThread);
+            await loadMessages(formattedThread.id);
         } else {
-            const newThread = await ThreadService.createThread(assistantId, module);
-            SessionStorage.setThreadIdForTab(tabId, newThread.id);
-            setThread(newThread);
+            const created = await ThreadService.createThread(assistantId, module);
+
+            const savedResponse = await createThread(
+                created.id,
+                assistantId,
+                module
+            );
+
+            setThread(savedResponse);
+            SessionStorage.setThreadIdForTab(tabId, savedResponse.id);
+            await loadMessages(savedResponse.id);
         }
     };
 

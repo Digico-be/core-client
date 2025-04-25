@@ -41,6 +41,12 @@ export const SessionStorage = {
         return mapping[tabId] ?? null;
     },
 
+    removeThreadIdForTab: (tabId: string) => {
+        const mapping = SessionStorage.getThreadMapping();
+        delete mapping[tabId];
+        sessionStorage.setItem(SESSION_KEYS.THREADS, JSON.stringify(mapping));
+    },
+
     getThreadMapping: (): Record<string, string> => {
         const raw = sessionStorage.getItem(SESSION_KEYS.THREADS);
         return raw ? JSON.parse(raw) : {};

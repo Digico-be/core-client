@@ -1,4 +1,4 @@
-import { Assistant } from '../models/assistant'
+import { Assistant } from '../../models/assistant'
 
 import { HttpService } from './index'
 

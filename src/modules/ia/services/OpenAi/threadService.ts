@@ -8,8 +8,6 @@ import {
 import { ThreadMessageContent } from '../../models/thread'
 import { sanitizeThreadContent } from '../../utils/threadUtils'
 
-
-
 export class ThreadService {
     static async createThread(assistantId: string, module?: string): Promise<any> {
         return await createThread(assistantId, module);
