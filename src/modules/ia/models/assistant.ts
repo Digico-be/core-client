@@ -6,9 +6,8 @@
 export interface Assistant {
   /**
    * Identifiant unique de l'assistant.
-   * Généré lors de la création de l'assistant via l'API OpenAI.
    */
-  id: string;
+  openai_id: string;
 
   /**
    * Nom de l'assistant.

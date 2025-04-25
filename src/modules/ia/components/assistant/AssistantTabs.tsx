@@ -3,6 +3,7 @@
 import React, {useEffect, useRef, useState} from 'react'
 import { v4 as uuidv4 } from 'uuid'
 
+import { destroyAssistant } from '../../services'
 import { AssistantService } from '../../services/OpenAi/assistantService'
 import { useAssistantTabs } from '../../hooks/useAssistantTabs'
 
@@ -100,16 +101,20 @@ const AssistantTabs: React.FC<AssistantTabsProps> = ({ type }) => {
     }
 
     const closeTab = async (id: string) => {
-        const assistantId = SessionStorage.getAssistantIdForTab(id)
+        const assistantId = SessionStorage.getAssistantOpenAiIdForTab(id)
 
         if (assistantId) {
             try {
-                await AssistantService.deleteAssistant(assistantId)
+                // 🧠 1. Supprimer chez OpenAI
+                await AssistantService.deleteAssistant(assistantId);
+
+                // 🧠 2. Supprimer dans ta DB Laravel
+                await destroyAssistant(assistantId);
             } catch (err) {
                 console.error('Erreur suppression assistant :', err)
             }
 
-            SessionStorage.removeAssistantIdForTab(id)
+            SessionStorage.removeAssistantOpenAiIdForTab(id)
         }
 
         const remaining = tabs.filter(tab => tab.id !== id)

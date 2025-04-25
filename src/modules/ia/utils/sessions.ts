@@ -1,27 +1,30 @@
 const SESSION_KEYS = {
-    ASSISTANTS: 'assistant_ids_by_tab',
+    ASSISTANTS: 'assistant_openai_ids_by_tab',
     THREADS: 'threads_by_tab',
     ASSISTANT_TABS: 'assistant_tabs',
     ACTIVE_TAB_ID: 'active_tab_id',
 };
 
 export const SessionStorage = {
-    // ASSISTANT PAR ONGLET
-    removeAssistantIdForTab(tabId: string) {
-        sessionStorage.removeItem(`assistant_id_${tabId}`);
-    },
-    setAssistantIdForTab: (tabId: string, assistantId: string) => {
-        const mapping = SessionStorage.getAssistantMapping();
-        mapping[tabId] = assistantId;
+    // ASSISTANT PAR ONGLET (stocke les openai_id par tab)
+    removeAssistantOpenAiIdForTab(tabId: string) {
+        const mapping = SessionStorage.getAssistantOpenAiIdMapping();
+        delete mapping[tabId];
         sessionStorage.setItem(SESSION_KEYS.ASSISTANTS, JSON.stringify(mapping));
     },
 
-    getAssistantIdForTab: (tabId: string): string | null => {
-        const mapping = SessionStorage.getAssistantMapping();
+    setAssistantOpenAiIdForTab: (tabId: string, openaiId: string) => {
+        const mapping = SessionStorage.getAssistantOpenAiIdMapping();
+        mapping[tabId] = openaiId;
+        sessionStorage.setItem(SESSION_KEYS.ASSISTANTS, JSON.stringify(mapping));
+    },
+
+    getAssistantOpenAiIdForTab: (tabId: string): string | null => {
+        const mapping = SessionStorage.getAssistantOpenAiIdMapping();
         return mapping[tabId] ?? null;
     },
 
-    getAssistantMapping: (): Record<string, string> => {
+    getAssistantOpenAiIdMapping: (): Record<string, string> => {
         const raw = sessionStorage.getItem(SESSION_KEYS.ASSISTANTS);
         return raw ? JSON.parse(raw) : {};
     },
@@ -54,6 +57,7 @@ export const SessionStorage = {
         return tabs ? JSON.parse(tabs) : [];
     },
 
+    // Tout effacer
     clear: () => {
         Object.values(SESSION_KEYS).forEach((key) => sessionStorage.removeItem(key));
     },

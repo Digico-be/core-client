@@ -2,7 +2,7 @@ import { Assistant } from '../models/assistant'
 
 import { HttpService } from './index'
 
-export const updateAssistant = async ({ id, ...data }: Partial<Omit<Assistant, 'id'>> & { id: Assistant['id'] }) =>
+export const updateAssistant = async ({ openai_id, ...data }: Partial<Omit<Assistant, 'id'>> & { openai_id: string }) =>
     HttpService.put<{
         data: Assistant
-    }>(`/${id}`, data)
+    }>(`/${openai_id}`, data)

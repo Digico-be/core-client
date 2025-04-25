@@ -1,12 +1,8 @@
-'use client'
+import React, { useState } from 'react';
 
-import React, { useState } from 'react'
+import { useAssistant } from '../../hooks/useAssistant';
 
-import { useAssistant } from '../../hooks/useAssistant'
-
-import MessageInput from '../message/MessageInput'
-
-
+import MessageInput from '../message/MessageInput';
 
 const AssistantBase: React.FC<{ module: string; tabId: string }> = ({ module, tabId }) => {
     const {
@@ -15,9 +11,9 @@ const AssistantBase: React.FC<{ module: string; tabId: string }> = ({ module, ta
         isError,
         error,
         isDeleting,
-    } = useAssistant(module, tabId)
+    } = useAssistant(module, tabId);
 
-    const [isDeleted] = useState(false)
+    const [isDeleted] = useState(false);
 
     return (
         <div className="bg-white pt-4">
@@ -34,13 +30,13 @@ const AssistantBase: React.FC<{ module: string; tabId: string }> = ({ module, ta
                     <h1 className="text-2xl font-bold text-center mb-4">{assistant.name}</h1>
                     <p className="text-center mb-6 text-grey">{assistant.description}</p>
 
-                    <MessageInput module={module} assistantId={assistant.id} tabId={tabId} />
+                    <MessageInput module={module} assistantId={assistant.openai_id} tabId={tabId} />
                 </>
             ) : (
                 <p className="text-center text-grey">Aucun assistant trouvé</p>
             )}
         </div>
-    )
-}
+    );
+};
 
-export default AssistantBase
+export default AssistantBase;
