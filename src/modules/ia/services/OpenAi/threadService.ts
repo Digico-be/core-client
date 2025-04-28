@@ -45,7 +45,10 @@ export class ThreadService {
     }
 
     static async getMessagesFromThread(threadId: string): Promise<any[]> {
-        return await getMessagesFromThread(threadId);
+        const reponse = await getMessagesFromThread(threadId);
+        console.log("📨 Réponse brute API Laravel getMessages:", reponse);
+
+        return reponse;
     }
 
     static async deleteMessagesFromThread(threadId: string, messageIds: string[]): Promise<void> {

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { createAssistant, destroyAssistant, readAssistant } from '../services/assistant';
+import { createAssistant, destroyAssistant, readAssistants } from '../services/assistant';
 import { AssistantService } from '../services/OpenAi/assistantService';
 import { destroyThread } from '../services/thread';
 
@@ -17,9 +17,6 @@ type OpenAiAssistant = {
     tools?: any[];
 };
 
-/**
- * Hook pour gérer les assistants, utilisant sessionStorage et l'API Laravel.
- */
 export const useAssistant = (module: string, tabId: string) => {
     const queryClient = useQueryClient();
     const [assistantOpenAiId, setAssistantOpenAiId] = useState(() =>
@@ -28,15 +25,18 @@ export const useAssistant = (module: string, tabId: string) => {
 
     const query = useQuery<Assistant>({
         queryKey: ['assistant', tabId],
-        queryFn: async () => {
-            let assistant;
+        queryFn: async (): Promise<Assistant> => {
+            let assistant: Assistant;
 
-            if (assistantOpenAiId) {
-                const storedAssistant = await readAssistant(assistantOpenAiId);
-                assistant = storedAssistant;
+            const existingAssistants = await readAssistants({ module });
+
+            if (Array.isArray(existingAssistants) && existingAssistants.length > 0) {
+                const matchingAssistant = existingAssistants[0];
+                SessionStorage.setAssistantOpenAiIdForTab(tabId, matchingAssistant.openai_id);
+                setAssistantOpenAiId(matchingAssistant.openai_id);
+                assistant = matchingAssistant;
             } else {
-                // Création côté OpenAI
-                const newAssistant = (await AssistantService.createAssistant(module)) as unknown as OpenAiAssistant
+                const newAssistant = (await AssistantService.createAssistant(module)) as unknown as OpenAiAssistant;
 
                 const saved = await createAssistant({
                     openai_id: newAssistant.id,
@@ -49,13 +49,14 @@ export const useAssistant = (module: string, tabId: string) => {
                 });
 
                 SessionStorage.setAssistantOpenAiIdForTab(tabId, saved.openai_id);
+                SessionStorage.setAssistantCreatedForTab(tabId);
                 setAssistantOpenAiId(saved.openai_id);
 
                 assistant = saved;
-
             }
 
-            return 'data' in assistant ? assistant.data : assistant;
+            console.groupEnd();
+            return assistant;
         },
         enabled: !!module && !!tabId,
         staleTime: 5 * 60 * 1000,
@@ -65,10 +66,8 @@ export const useAssistant = (module: string, tabId: string) => {
         mutationFn: async () => {
             if (!assistantOpenAiId) return;
 
-            // 💥 D'abord on supprime l'assistant OpenAI
             await destroyAssistant(assistantOpenAiId);
 
-            // 🧼 Ensuite on supprime le thread Laravel lié
             const threadId = SessionStorage.getThreadIdForTab(tabId);
             if (threadId) {
                 try {

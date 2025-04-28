@@ -8,6 +8,7 @@ const AssistantBase: React.FC<{ module: string; tabId: string }> = ({ module, ta
     const {
         data: assistant,
         isLoading,
+        isSuccess,
         isError,
         error,
         isDeleting,
@@ -25,18 +26,24 @@ const AssistantBase: React.FC<{ module: string; tabId: string }> = ({ module, ta
                 </p>
             ) : isDeleted ? (
                 <p className="text-center text-gray">Assistant supprimé</p>
-            ) : assistant ? (
+            ) : isSuccess && assistant ? (
                 <>
                     <h1 className="text-2xl font-bold text-center mb-4">{assistant.name}</h1>
                     <p className="text-center mb-6 text-grey">{assistant.description}</p>
 
-                    <MessageInput module={module} assistantId={assistant.openai_id} tabId={tabId} />
+                    {/* 🛠 Ici on ne montre MessageInput que si assistant est prêt */}
+                    <MessageInput
+                        module={module}
+                        assistantId={assistant.openai_id}
+                        tabId={tabId}
+                    />
                 </>
             ) : (
                 <p className="text-center text-grey">Aucun assistant trouvé</p>
             )}
         </div>
     );
+
 };
 
 export default AssistantBase;

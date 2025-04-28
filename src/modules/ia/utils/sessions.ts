@@ -6,6 +6,21 @@ const SESSION_KEYS = {
 };
 
 export const SessionStorage = {
+    setAssistantCreatedForTab: (tabId: string) => {
+        const key = `assistant_created_${tabId}`;
+        sessionStorage.setItem(key, 'true');
+    },
+
+    isAssistantCreatedForTab: (tabId: string): boolean => {
+        const key = `assistant_created_${tabId}`;
+        return sessionStorage.getItem(key) === 'true';
+    },
+
+    clearAssistantCreatedFlag: (tabId: string) => {
+        const key = `assistant_created_${tabId}`;
+        sessionStorage.removeItem(key);
+    },
+
     // ASSISTANT PAR ONGLET (stocke les openai_id par tab)
     removeAssistantOpenAiIdForTab(tabId: string) {
         const mapping = SessionStorage.getAssistantOpenAiIdMapping();
