@@ -74,7 +74,7 @@ const AssistantTabs: React.FC<AssistantTabsProps> = ({ type }) => {
             window.removeEventListener('resize', handle)
         }
     }, [tabs, activeTabId])
-    
+
     const addTab = () => {
         const moduleName =
             type === 'general'

@@ -3,9 +3,30 @@ const SESSION_KEYS = {
     THREADS: 'threads_by_tab',
     ASSISTANT_TABS: 'assistant_tabs',
     ACTIVE_TAB_ID: 'active_tab_id',
+    FORCE_NEW_ASSISTANT: 'force_new_assistant',   // ⬅️  nouvel identifiant
+
 };
 
 export const SessionStorage = {
+    /* ─────── flag 'forceNew' pour un tab ─────── */
+    setForceNewAssistant: (tabId: string) => {
+        const raw = sessionStorage.getItem(SESSION_KEYS.FORCE_NEW_ASSISTANT) ?? '[]';
+        const list: string[] = JSON.parse(raw);
+        if (!list.includes(tabId)) list.push(tabId);
+        sessionStorage.setItem(SESSION_KEYS.FORCE_NEW_ASSISTANT, JSON.stringify(list));
+    },
+
+    isForceNewAssistant: (tabId: string): boolean => {
+        const raw = sessionStorage.getItem(SESSION_KEYS.FORCE_NEW_ASSISTANT) ?? '[]';
+        return (JSON.parse(raw) as string[]).includes(tabId);
+    },
+
+    clearForceNewAssistant: (tabId: string) => {
+        const raw = sessionStorage.getItem(SESSION_KEYS.FORCE_NEW_ASSISTANT) ?? '[]';
+        const list: string[] = JSON.parse(raw).filter((id: string) => id !== tabId);
+        sessionStorage.setItem(SESSION_KEYS.FORCE_NEW_ASSISTANT, JSON.stringify(list));
+    },
+
     setAssistantCreatedForTab: (tabId: string) => {
         const key = `assistant_created_${tabId}`;
         sessionStorage.setItem(key, 'true');
