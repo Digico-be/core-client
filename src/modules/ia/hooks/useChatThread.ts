@@ -143,9 +143,9 @@ export const useChatThread = (tabId: string, assistantId: string, module: string
             file:
                 hasFile && attachments?.[0]
                     ? {
-                          file_id: attachments[0],
-                          filename: attachments[0].split('/').pop() ?? 'Fichier'
-                      }
+                        file_id: attachments[0],
+                        filename: attachments[0].split('/').pop() ?? 'Fichier'
+                    }
                     : undefined
         }
 
