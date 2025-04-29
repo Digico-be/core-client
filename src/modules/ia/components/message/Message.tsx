@@ -4,9 +4,18 @@ import React, { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import rehypeRaw from 'rehype-raw'
 
-import type { Message as MessageType } from '../../models/message'
-
-interface MessageProps extends MessageType {
+interface MessageProps {
+    id: string
+    content: string
+    sender: 'user' | 'assistant'
+    timestamp?: string | null
+    type?: 'text' | 'file'
+    attachments?: {
+        openai_id: string
+        filename: string
+        size: number
+        mime_type: string
+    }[]
     onDelete: (id: string) => void
     onEdit: (id: string, newContent: string) => void
 }
@@ -16,8 +25,8 @@ const Message: React.FC<MessageProps> = ({
                                              content,
                                              sender,
                                              timestamp,
-                                             file,
                                              type = 'text',
+                                             attachments = [],
                                              onDelete,
                                              onEdit
                                          }) => {
@@ -47,9 +56,19 @@ const Message: React.FC<MessageProps> = ({
             >
                 {/* Contenu du message */}
                 <div className="whitespace-pre-wrap mb-2">
-                    {type === 'file' && file ? (
-                        <div className="flex flex-col gap-1">
-                            {/* TODO : affichage fichier */}
+                    {type === 'file' && attachments.length > 0 ? (
+                        <div className="flex flex-col gap-2">
+                            {attachments.map((file) => (
+                                <a
+                                    key={file.openai_id}
+                                    href={`https://api.openai.com/v1/files/${file.openai_id}/content`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 underline hover:text-blue-800"
+                                >
+                                    📎 {file.filename}
+                                </a>
+                            ))}
                         </div>
                     ) : isEditing ? (
                         <textarea
@@ -81,7 +100,7 @@ const Message: React.FC<MessageProps> = ({
                 </div>
 
                 {/* Actions utilisateur */}
-                {!isEditing && sender === 'user' && (
+                {!isEditing && sender === 'user' && type === 'text' && (
                     <div className="flex justify-end gap-2 mt-3 pt-2 text-sm">
                         <button
                             onClick={handleEditClick}
@@ -121,7 +140,6 @@ const Message: React.FC<MessageProps> = ({
             </div>
         </div>
     )
-
 }
 
 export default Message

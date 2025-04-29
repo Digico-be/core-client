@@ -18,7 +18,7 @@ interface MessageInputProps {
     assistantId: string;
     tabId: string;
 
-    /** ⬇️  données et actions injectées depuis AssistantBase */
+    /** ⬇️ données et actions injectées depuis AssistantBase */
     messages: Message[];
     streamedResponse: string;
     sendMessage: (
@@ -68,10 +68,23 @@ const MessageInput: React.FC<MessageInputProps> = ({
         if (hasFile && !hasText) content.push({ type: 'text', text: '📎 Fichier joint' });
 
         const attachments = hasFile ? [pendingFile!.id] : undefined;
+
         await sendMessage(content, attachments);
 
         setUserQuery('');
         setPendingFile(null);
+    };
+
+    const handleFileDrop = async (file: File) => {
+        toast.info(`📥 Dépôt de fichier : ${file.name}`);
+        const uploaded = await uploadFile(file);
+
+        if (uploaded) {
+            toast.success('✅ Fichier uploadé');
+            setPendingFile(uploaded);
+        } else {
+            toast.error('❌ Échec de l’upload');
+        }
     };
 
     /** ─────── UI */
@@ -108,16 +121,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
             {/* Zone input */}
             <div className="w-full px-4">
                 <FileDropZone
-                    onFileDrop={async (file) => {
-                        toast.info(`📥 Dépôt de fichier : ${file.name}`);
-                        const uploaded = await uploadFile(file);
-                        if (uploaded) {
-                            toast.success('✅ Fichier uploadé');
-                            setPendingFile(uploaded);
-                        } else {
-                            toast.error('❌ Échec de l’upload');
-                        }
-                    }}
+                    onFileDrop={handleFileDrop}
                     onDragStateChange={(dragging) => setIsDragging(dragging)}
                 >
                     <div
@@ -142,14 +146,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
                             onChange={async (e) => {
                                 const file = e.target.files?.[0];
                                 if (!file) return;
-                                toast.info(`📤 Upload fichier : ${file.name}`);
-                                const uploaded = await uploadFile(file);
-                                if (uploaded) {
-                                    toast.success('✅ Fichier uploadé');
-                                    setPendingFile(uploaded);
-                                } else {
-                                    toast.error('❌ Upload échoué');
-                                }
+                                await handleFileDrop(file);
                             }}
                         />
 

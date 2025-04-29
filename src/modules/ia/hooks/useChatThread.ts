@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 
+import { createFileMessage } from '../services/file_message'
 import { RunService } from '../services/OpenAi/runService'
 import { StreamService } from '../services/OpenAi/streamService'
 import { ThreadService } from '../services/OpenAi/threadService'
@@ -137,16 +138,27 @@ export const useChatThread = (tabId: string, assistantId: string, module: string
             id: userRes.id,
             sender: 'user',
             content: content.find((c) => c.type === 'text')?.text ?? '',
-            type: hasFile ? 'file' : 'text',
             timestamp: new Date(userRes.created_at * 1000).toISOString(),
             threadId: thread.id,
-            file:
-                hasFile && attachments?.[0]
-                    ? {
-                        file_id: attachments[0],
-                        filename: attachments[0].split('/').pop() ?? 'Fichier'
-                    }
-                    : undefined
+            attachments: hasFile && attachments?.[0]
+                ? [{
+                    openai_id: attachments[0],
+                    filename: attachments[0].split('/').pop() ?? 'Fichier',
+                    size: 0,
+                    mime_type: ''
+                }]
+                : undefined
+        }
+
+        if (hasFile && attachments?.length > 0) {
+            for (const fileId of attachments) {
+                await createFileMessage({
+                    file_openai_id: fileId,
+                    message_openai_id: userRes.id,
+                    thread_openai_id: thread.id
+                });
+
+            }
         }
 
         if (!options.skipUserMessage) {
