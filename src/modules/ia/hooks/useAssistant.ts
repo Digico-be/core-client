@@ -54,24 +54,23 @@ export const useAssistant = (module: string, tabId: string) => {
              *     ➜ peut-on réutiliser un assistant existant ?
              * ──────────────────────────────────────────────── */
             if (!cachedId && !mustCreateNew) {
-                // ← on bloque la réutilisation si flag
-                const resp = await readAssistants({ module })
-                const existing: Assistant[] = Array.isArray(resp) ? resp : (resp?.data ?? [])
+                // On lit tous les assistants du même module
+                const resp = await readAssistants({ module });
+                const existing: Assistant[] = Array.isArray(resp) ? resp : (resp?.data ?? []);
 
-                // S'il n'y en a qu'un pour ce module, on le reprend
-                if (existing.length === 1) {
-                    const single = existing[0]
+                // Assistants déjà liés à un onglet de la session en cours
+                const usedIds = Object.values(SessionStorage.getAssistantOpenAiIdMapping());
 
-                    SessionStorage.setAssistantOpenAiIdForTab(tabId, single.openai_id)
-                    setAssistantOpenAiId(single.openai_id)
+                // Premier assistant libre (non utilisé par un autre onglet)
+                const available = existing.find(a => !usedIds.includes(a.openai_id));
 
-                    //  👉 signale à useChatThread qu'il NE faut PAS créer un thread neuf
-                    //     (on veut récupérer l'ancien s'il existe)
-                    //     donc : NE PAS poser le flag assistant_created
-
-                    return single // ✅ anciens messages rechargés
+                if (available) {
+                    SessionStorage.setAssistantOpenAiIdForTab(tabId, available.openai_id);
+                    setAssistantOpenAiId(available.openai_id);
+                    return available;          // ✅ réutilisé mais jamais partagé
                 }
             }
+
 
             /* ────────────────────────────────────────────────
              * 3.  Création d’un nouvel assistant (cas par défaut)
