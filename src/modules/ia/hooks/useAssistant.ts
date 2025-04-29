@@ -54,22 +54,28 @@ export const useAssistant = (module: string, tabId: string) => {
              *     ➜ peut-on réutiliser un assistant existant ?
              * ──────────────────────────────────────────────── */
             if (!cachedId && !mustCreateNew) {
-                // On lit tous les assistants du même module
-                const resp = await readAssistants({ module });
-                const existing: Assistant[] = Array.isArray(resp) ? resp : (resp?.data ?? []);
+                // 1) on récupère TOUS les assistants de l’utilisateur
+                const resp = await readAssistants();           // ⬅️  plus de filtre côté API
+                const all: Assistant[] = Array.isArray(resp) ? resp : resp?.data ?? [];
 
-                // Assistants déjà liés à un onglet de la session en cours
+                // 2) on garde uniquement ceux du même module
+                const existing = all.filter(a => a.module === module);
+
+                // 3) on élimine ceux déjà mappés à un onglet ouvert
                 const usedIds = Object.values(SessionStorage.getAssistantOpenAiIdMapping());
-
-                // Premier assistant libre (non utilisé par un autre onglet)
                 const available = existing.find(a => !usedIds.includes(a.openai_id));
 
                 if (available) {
                     SessionStorage.setAssistantOpenAiIdForTab(tabId, available.openai_id);
                     setAssistantOpenAiId(available.openai_id);
-                    return available;          // ✅ réutilisé mais jamais partagé
+
+                    // pas de flag assistant_created → useChatThread tentera
+                    // de reprendre l’ancien thread s’il existe
+                    return available;
                 }
             }
+
+
 
 
             /* ────────────────────────────────────────────────

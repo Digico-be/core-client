@@ -24,6 +24,7 @@ interface MessageInputProps {
     sendMessage: (
         input: string | ThreadMessageContent[],
         attachments?: string[],
+        options?: { skipUserMessage?: boolean; skipAssistantMessage?: boolean },
     ) => Promise<void>;
     deleteMessage: (threadId: string, messageId: string) => Promise<void>;
     editMessage: (threadId: string, messageId: string, newContent: string) => Promise<void>;
@@ -98,7 +99,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
                     onEditMessage={async (id, txt) => {
                         if (thread?.id) {
                             await editMessage(thread.id, id, txt);
-                            if (txt.trim()) await sendMessage(txt);
+                            if (txt.trim()) await sendMessage(txt, undefined, { skipUserMessage: true });
                         }
                     }}
                 />

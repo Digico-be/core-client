@@ -122,7 +122,7 @@ export const useChatThread = (tabId: string, assistantId: string, module: string
         await loadMessages(newThread.id)
     }
 
-    const sendMessage = async (input: string | ThreadMessageContent[], attachments?: string[]) => {
+    const sendMessage = async (input: string | ThreadMessageContent[], attachments?: string[], options: { skipUserMessage?: boolean } = {}) => {
         if (!thread?.id) return
 
         setStreamedResponse('')
@@ -149,7 +149,9 @@ export const useChatThread = (tabId: string, assistantId: string, module: string
                     : undefined
         }
 
-        setMessages((prev) => [...prev, userMessage])
+        if (!options.skipUserMessage) {
+            setMessages((prev) => [...prev, userMessage])
+        }
 
         const thinkingMessage: Message = {
             id: 'thinking',
@@ -169,15 +171,24 @@ export const useChatThread = (tabId: string, assistantId: string, module: string
             fullResponse = await StreamService.startStreamingResponse(
                 textToUse,
                 (token) => {
+                    // on ajoute le token au flux qui alimente le message « streaming »
+                    setStreamedResponse((prev) => prev + token);
+
                     if (first) {
-                        setMessages((prev) => prev.filter((m) => m.id !== 'thinking'))
-                        first = false
+                        first = false;
+
+                        // on retire le placeholder une fois la mise-à-jour précédente enregistrée
+                        setTimeout(() => {
+                            setMessages((prev) => prev.filter((m) => m.id !== 'thinking'));
+                        }, 0);
                     }
-                    setStreamedResponse((prev) => prev + token)
                 },
+
                 workspaceSlug,
                 (name, args) => console.log('🛠️ Function call', name, args)
-            )
+            );
+
+
 
             if (fullResponse.trim().length > 0) {
                 const assistantRes = await ThreadService.sendMessageToThread(thread.id, [{ type: 'text', text: fullResponse }], 'assistant')
