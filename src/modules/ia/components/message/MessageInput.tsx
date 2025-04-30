@@ -25,7 +25,7 @@ interface MessageInputProps {
         input: string | ThreadMessageContent[],
         attachments?: IAFile[],
         options?: { skipUserMessage?: boolean; skipAssistantMessage?: boolean }
-    ) => Promise<void>
+    ) => Promise<void>;
     deleteMessage: (threadId: string, messageId: string) => Promise<void>;
     editMessage: (threadId: string, messageId: string, newContent: string) => Promise<void>;
     thread: Thread | null;
@@ -44,6 +44,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
     const [userQuery, setUserQuery] = useState('');
     const [pendingFile, setPendingFile] = useState<IAFile | null>(null);
     const [isDragging, setIsDragging] = useState(false);
+    const [isLocked, setIsLocked] = useState(false);
 
     const isSending = streamedResponse.length > 0;
 
@@ -52,7 +53,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
         const hasText = userQuery.trim() !== '';
         const hasFile = pendingFile !== null;
 
-        if (isSending) return;
+        if (isSending || isLocked) return;
 
         if (!hasText && hasFile) {
             toast.error('Vous devez poser une question avec le fichier.');
@@ -69,7 +70,9 @@ const MessageInput: React.FC<MessageInputProps> = ({
 
         const attachments = hasFile ? [pendingFile!] : undefined;
 
+        setIsLocked(true); // 🔒 verrouillage
         await sendMessage(content, attachments);
+        setIsLocked(false); // 🔓 déverrouillage
 
         setUserQuery('');
         setPendingFile(null);
@@ -112,7 +115,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
                     onEditMessage={async (id, txt) => {
                         if (thread?.id) {
                             await editMessage(thread.id, id, txt);
-                            if (txt.trim()) await sendMessage(txt, undefined, { skipUserMessage: true });
+                            // Ne pas renvoyer sendMessage ici pour éviter doublon
                         }
                     }}
                 />
@@ -135,7 +138,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
                             type="button"
                             onClick={() => document.getElementById('fileInput')?.click()}
                             className="px-3 py-2 rounded-lg border hover:bg-gray-100"
-                            disabled={isSending}
+                            disabled={isSending || isLocked}
                         >
                             📎
                         </button>
@@ -156,14 +159,14 @@ const MessageInput: React.FC<MessageInputProps> = ({
                             value={userQuery}
                             onChange={(e) => setUserQuery(e.target.value)}
                             onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey && !isSending) {
+                                if (e.key === 'Enter' && !e.shiftKey && !isSending && !isLocked) {
                                     e.preventDefault();
                                     handleSend();
                                 }
                             }}
                             placeholder="Posez une question…"
                             className="min-w-0 flex-1 p-3 border rounded-lg"
-                            disabled={isSending}
+                            disabled={isSending || isLocked}
                         />
 
                         {/* aperçu fichier */}
@@ -183,12 +186,14 @@ const MessageInput: React.FC<MessageInputProps> = ({
                         {/* bouton envoyer */}
                         <button
                             onClick={handleSend}
-                            disabled={isSending || (userQuery.trim() === '' && !pendingFile)}
+                            disabled={isSending || isLocked || (userQuery.trim() === '' && !pendingFile)}
                             className={`px-4 py-2 rounded-lg text-white transition duration-200 ease-in-out ${
-                                isSending ? 'bg-grey-800 cursor-not-allowed' : 'bg-primary hover:bg-blue-600'
+                                isSending || isLocked
+                                    ? 'bg-grey-800 cursor-not-allowed'
+                                    : 'bg-primary hover:bg-blue-600'
                             }`}
                         >
-                            {isSending ? 'Réponse…' : 'Envoyer'}
+                            {isSending || isLocked ? 'Réponse…' : 'Envoyer'}
                         </button>
                     </div>
                 </FileDropZone>
