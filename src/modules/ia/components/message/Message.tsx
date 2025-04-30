@@ -55,8 +55,9 @@ const Message: React.FC<MessageProps> = ({
                 }`}
             >
                 {/* Contenu du message */}
-                <div className="whitespace-pre-wrap mb-2">
-                    {type === 'file' && attachments.length > 0 ? (
+                <div className="whitespace-pre-wrap mb-2 space-y-2">
+                    {/* ➡️ Afficher les fichiers attachés s’il y en a */}
+                    {attachments.length > 0 && (
                         <div className="flex flex-col gap-2">
                             {attachments.map((file) => (
                                 <a
@@ -70,7 +71,10 @@ const Message: React.FC<MessageProps> = ({
                                 </a>
                             ))}
                         </div>
-                    ) : isEditing ? (
+                    )}
+
+                    {/* ➡️ Afficher le texte ou la zone d'édition */}
+                    {isEditing ? (
                         <textarea
                             value={editedText}
                             onChange={(e) => setEditedText(e.target.value)}
