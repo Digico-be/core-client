@@ -153,20 +153,23 @@ export const useChatThread = (tabId: string, assistantId: string, module: string
                 : undefined
         }
 
-        for (const file of attachments!) {
-            const fileOpenAIId = typeof file === 'string' ? file : file.id
+        if (attachments?.length) {
+            for (const file of attachments) {
+                const fileOpenAIId = typeof file === 'string' ? file : file.id
 
-            if (!fileOpenAIId) {
-                console.error('❌ Fichier sans ID OpenAI :', file)
-                continue
+                if (!fileOpenAIId) {
+                    console.error('❌ Fichier sans ID OpenAI :', file)
+                    continue
+                }
+
+                await createFileMessage({
+                    file_openai_id: fileOpenAIId,
+                    message_openai_id: userRes.id,
+                    thread_openai_id: thread.id
+                })
             }
-
-            await createFileMessage({
-                file_openai_id: fileOpenAIId,
-                message_openai_id: userRes.id,
-                thread_openai_id: thread.id
-            })
         }
+
 
         if (!options.skipUserMessage) {
             setMessages((prev) => [...prev, userMessage])
