@@ -15,3 +15,18 @@ export const uploadFileToOpenAI = async (file: File) => {
 
     return await res.json()
 }
+
+export const deleteOpenAIFile = async (fileId: string) => {
+    const res = await fetch('/api/delete-file', {
+        method: 'POST',
+        body: JSON.stringify({ fileId }),
+        headers: { 'Content-Type': 'application/json' }
+    })
+
+    if (!res.ok) {
+        console.error('Erreur suppression fichier OpenAI', await res.text())
+        return null
+    }
+
+    return await res.json()
+}

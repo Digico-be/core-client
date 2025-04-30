@@ -23,9 +23,9 @@ interface MessageInputProps {
     streamedResponse: string;
     sendMessage: (
         input: string | ThreadMessageContent[],
-        attachments?: string[],
-        options?: { skipUserMessage?: boolean; skipAssistantMessage?: boolean },
-    ) => Promise<void>;
+        attachments?: IAFile[],
+        options?: { skipUserMessage?: boolean; skipAssistantMessage?: boolean }
+    ) => Promise<void>
     deleteMessage: (threadId: string, messageId: string) => Promise<void>;
     editMessage: (threadId: string, messageId: string, newContent: string) => Promise<void>;
     thread: Thread | null;
@@ -67,7 +67,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
         if (hasText) content.push({ type: 'text', text: userQuery.trim() });
         if (hasFile && !hasText) content.push({ type: 'text', text: '📎 Fichier joint' });
 
-        const attachments = hasFile ? [pendingFile!.id] : undefined;
+        const attachments = hasFile ? [pendingFile!] : undefined;
 
         await sendMessage(content, attachments);
 

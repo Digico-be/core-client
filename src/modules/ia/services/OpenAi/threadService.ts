@@ -3,10 +3,10 @@ import {
     deleteMessagesFromThread,
     editMessageInThread,
     getMessagesFromThread,
-    sendStructuredMessageToThread
+    sendStructuredMessageToThread,
 } from '../../helpers/api/threadApiHelper';
-import { ThreadMessageContent } from '../../models/thread'
-import { sanitizeThreadContent } from '../../utils/threadUtils'
+import { ThreadMessageContent } from '../../models/thread';
+import { sanitizeThreadContent } from '../../utils/threadUtils';
 
 export class ThreadService {
     static async createThread(assistantId: string, module?: string): Promise<any> {
@@ -17,7 +17,8 @@ export class ThreadService {
         threadId: string,
         content: ThreadMessageContent[],
         role: 'user' | 'assistant' = 'user',
-        attachments?: string[]
+        /** ⬅️ 1) le type est maintenant string[] */
+        attachments?: string[],
     ): Promise<any> {
         const hasFile = Array.isArray(attachments) && attachments.length > 0;
         const sanitized = sanitizeThreadContent(content);
@@ -27,15 +28,14 @@ export class ThreadService {
             // S'il s'agit d'une réponse assistant suite à un tool_call, ne pas bloquer
             const isToolCallResponse = role === 'assistant' && content.length === 0;
             if (!isToolCallResponse) {
-                throw new Error('Impossible d’envoyer un message vide');
+                throw new Error("Impossible d’envoyer un message vide");
             }
         }
 
         const finalContent: Array<{ type: 'text'; text: string }> =
-            sanitized.length > 0
-                ? sanitized
-                : [{ type: 'text', text: '📎 Fichier joint' }];
+            sanitized.length > 0 ? sanitized : [{ type: 'text', text: '📎 Fichier joint' }];
 
+        /** ⬅️ 2) on passe le string[] directement */
         return await sendStructuredMessageToThread({
             threadId,
             content: finalContent,
@@ -46,8 +46,7 @@ export class ThreadService {
 
     static async getMessagesFromThread(threadId: string): Promise<any[]> {
         const reponse = await getMessagesFromThread(threadId);
-        console.log("📨 Réponse brute API Laravel getMessages:", reponse);
-
+        console.log('📨 Réponse brute API Laravel getMessages:', reponse);
         return reponse;
     }
 

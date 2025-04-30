@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
-import { readsFileMessages } from '../services/file_message'
+import { deleteFileMessage, readsFileMessages } from '../services/file_message'
+import { FileService } from '../services/OpenAi/fileService'
 import { ThreadService } from '../services/OpenAi/threadService'
 
 import { Message } from '../models/message'
@@ -51,13 +52,25 @@ export const useThreadMessages = () => {
         const index = messages.findIndex((msg) => msg.id === messageId)
         if (index === -1) return
 
-        const toDelete = messages.slice(index).map((msg) => msg.id)
+        const toDelete = messages.slice(index)
 
-        // Mise à jour locale
-        setMessages((prev) => prev.filter((m) => !toDelete.includes(m.id)))
+        // suppression côté OpenAI
+        await ThreadService.deleteMessagesFromThread(threadId, toDelete.map((msg) => msg.id))
 
-        // Suppression backend
-        await ThreadService.deleteMessagesFromThread(threadId, toDelete)
+        // suppression côté Laravel (liens + fichiers si plus utilisés)
+        await deleteFileMessage(messageId)
+
+        // suppression des fichiers dans OpenAI
+        for (const msg of toDelete) {
+            if (msg.attachments && msg.attachments.length > 0) {
+                for (const file of msg.attachments) {
+                    await FileService.delete(file.openai_id)
+                }
+            }
+        }
+
+        // suppression locale
+        setMessages((prev) => prev.filter((m) => !toDelete.map((x) => x.id).includes(m.id)))
     }
 
     const editMessage = async (threadId: string, messageId: string, newContent: string) => {

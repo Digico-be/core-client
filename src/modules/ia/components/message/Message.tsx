@@ -4,6 +4,8 @@ import React, { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import rehypeRaw from 'rehype-raw'
 
+import AttachmentPreview from '../file/AttachmentPreview'
+
 interface MessageProps {
     id: string
     content: string
@@ -20,22 +22,11 @@ interface MessageProps {
     onEdit: (id: string, newContent: string) => void
 }
 
-const Message: React.FC<MessageProps> = ({
-                                             id,
-                                             content,
-                                             sender,
-                                             timestamp,
-                                             type = 'text',
-                                             attachments = [],
-                                             onDelete,
-                                             onEdit
-                                         }) => {
+const Message: React.FC<MessageProps> = ({ id, content, sender, timestamp, type = 'text', attachments = [], onDelete, onEdit }) => {
     const [isEditing, setIsEditing] = useState(false)
     const [editedText, setEditedText] = useState(content)
 
-    const formattedTimestamp = timestamp
-        ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        : '---'
+    const formattedTimestamp = timestamp ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '---'
 
     const handleEditClick = () => setIsEditing(true)
     const handleCancelClick = () => {
@@ -49,31 +40,10 @@ const Message: React.FC<MessageProps> = ({
 
     return (
         <div className={`flex ${sender === 'user' ? 'justify-end' : 'justify-start'} px-4`}>
-            <div
-                className={`p-4 max-w-[80%] rounded-lg shadow-md ${
-                    sender === 'user' ? 'bg-blue-100' : 'bg-gray-200'
-                }`}
-            >
+            <div className={`p-4 max-w-[80%] rounded-lg shadow-md ${sender === 'user' ? 'bg-blue-100' : 'bg-gray-200'}`}>
                 {/* Contenu du message */}
-                <div className="whitespace-pre-wrap mb-2 space-y-2">
-                    {/* ➡️ Afficher les fichiers attachés s’il y en a */}
-                    {attachments.length > 0 && (
-                        <div className="flex flex-col gap-2">
-                            {attachments.map((file) => (
-                                <a
-                                    key={file.openai_id}
-                                    href={`https://api.openai.com/v1/files/${file.openai_id}/content`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-600 underline hover:text-blue-800"
-                                >
-                                    📎 {file.filename}
-                                </a>
-                            ))}
-                        </div>
-                    )}
-
-                    {/* ➡️ Afficher le texte ou la zone d'édition */}
+                <div className="whitespace-pre-wrap mb-2 space-y-2 flex-col">
+                    {/* Afficher le texte ou la zone d'édition */}
                     {isEditing ? (
                         <textarea
                             value={editedText}
@@ -87,35 +57,29 @@ const Message: React.FC<MessageProps> = ({
                             rehypePlugins={[rehypeRaw]}
                             components={{
                                 a: ({ href, children }) => (
-                                    <a
-                                        href={href}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-blue-600 underline hover:text-blue-800"
-                                    >
+                                    <a href={href} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">
                                         {children}
                                     </a>
-                                ),
-                            }}
-                        >
+                                )
+                            }}>
                             {content}
                         </ReactMarkdown>
                     )}
                 </div>
 
                 {/* Actions utilisateur */}
-                {!isEditing && sender === 'user' && type === 'text' && (
+                {!isEditing && sender === 'user' && (type === 'text' || (attachments?.length ?? 0) === 0) && (
                     <div className="flex justify-end gap-2 mt-3 pt-2 text-sm">
-                        <button
-                            onClick={handleEditClick}
-                            className="flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
-                        >
-                            ✏️ Modifier
-                        </button>
+                        {(attachments?.length ?? 0) === 0 && (
+                            <button
+                                onClick={handleEditClick}
+                                className="flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition">
+                                ✏️ Modifier
+                            </button>
+                        )}
                         <button
                             onClick={() => onDelete(id)}
-                            className="flex items-center gap-1 px-3 py-1 rounded-full bg-red-100 text-red-700 hover:bg-red-200 transition"
-                        >
+                            className="flex items-center gap-1 px-3 py-1 rounded-full bg-red-100 text-red-700 hover:bg-red-200 transition">
                             🗑️ Supprimer
                         </button>
                     </div>
@@ -126,19 +90,21 @@ const Message: React.FC<MessageProps> = ({
 
                 {/* Actions en mode édition */}
                 {isEditing && (
-                    <div className="flex gap-2 justify-end mt-2">
-                        <button
-                            onClick={handleSaveClick}
-                            className="text-green-500 hover:text-green-700 text-sm"
-                        >
+                    <div className="flex gap-2 justify-end mt-2 pb-2">
+                        <button onClick={handleSaveClick} className="text-green-500 hover:text-green-700 text-sm">
                             Enregistrer
                         </button>
-                        <button
-                            onClick={handleCancelClick}
-                            className="text-red-500 hover:text-red-700 text-sm"
-                        >
+                        <button onClick={handleCancelClick} className="text-red-500 hover:text-red-700 text-sm">
                             Annuler
                         </button>
+                    </div>
+                )}
+                {/* ➡️ Afficher les fichiers attachés s’il y en a */}
+                {attachments.length > 0 && (
+                    <div className="flex flex-col gap-2 pt-8">
+                        {attachments.map((file) => (
+                            <AttachmentPreview key={file.openai_id} {...file} />
+                        ))}
                     </div>
                 )}
             </div>

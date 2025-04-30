@@ -6,6 +6,7 @@ import { StreamService } from '../services/OpenAi/streamService'
 import { ThreadService } from '../services/OpenAi/threadService'
 import { createThread, findThread, readThread } from '../services/thread'
 
+import { IAFile } from '../models/file'
 import { Message } from '../models/message'
 import { Thread, ThreadMessageContent } from '../models/thread'
 import { SessionStorage } from '../utils/sessions'
@@ -69,7 +70,7 @@ export const useChatThread = (tabId: string, assistantId: string, module: string
                 console.groupEnd()
                 return // ✅
             } catch (err) {
-                console.warn('⚠️ Thread stocké introuvable, mapping retiré.')
+                console.warn('⚠️ Thread stocké introuvable, mapping retiré.', err)
                 SessionStorage.removeThreadIdForTab(tabId)
             }
         }
@@ -123,7 +124,7 @@ export const useChatThread = (tabId: string, assistantId: string, module: string
         await loadMessages(newThread.id)
     }
 
-    const sendMessage = async (input: string | ThreadMessageContent[], attachments?: string[], options: { skipUserMessage?: boolean } = {}) => {
+    const sendMessage = async (input: string | ThreadMessageContent[], attachments?: IAFile[], options: { skipUserMessage?: boolean } = {}) => {
         if (!thread?.id) return
 
         setStreamedResponse('')
@@ -132,7 +133,9 @@ export const useChatThread = (tabId: string, assistantId: string, module: string
 
         const hasFile = !!attachments?.length
 
-        const userRes = await ThreadService.sendMessageToThread(thread.id, content, 'user', attachments)
+        const attachmentIds = attachments?.map((att) => att.id).filter(Boolean)
+
+        const userRes = await ThreadService.sendMessageToThread(thread.id, content, 'user', attachmentIds)
 
         const userMessage: Message = {
             id: userRes.id,
@@ -140,25 +143,29 @@ export const useChatThread = (tabId: string, assistantId: string, module: string
             content: content.find((c) => c.type === 'text')?.text ?? '',
             timestamp: new Date(userRes.created_at * 1000).toISOString(),
             threadId: thread.id,
-            attachments: hasFile && attachments?.[0]
-                ? [{
-                    openai_id: attachments[0],
-                    filename: attachments[0].split('/').pop() ?? 'Fichier',
-                    size: 0,
-                    mime_type: ''
-                }]
+            attachments: hasFile
+                ? attachments?.map((f) => ({
+                      openai_id: f.id,
+                      filename: f.filename,
+                      size: f.size ?? 0, // fallback ici
+                      mime_type: f.mimeType ?? 'application/octet-stream' // fallback ici
+                  }))
                 : undefined
         }
 
-        if (hasFile && attachments?.length > 0) {
-            for (const fileId of attachments) {
-                await createFileMessage({
-                    file_openai_id: fileId,
-                    message_openai_id: userRes.id,
-                    thread_openai_id: thread.id
-                });
+        for (const file of attachments!) {
+            const fileOpenAIId = typeof file === 'string' ? file : file.id
 
+            if (!fileOpenAIId) {
+                console.error('❌ Fichier sans ID OpenAI :', file)
+                continue
             }
+
+            await createFileMessage({
+                file_openai_id: fileOpenAIId,
+                message_openai_id: userRes.id,
+                thread_openai_id: thread.id
+            })
         }
 
         if (!options.skipUserMessage) {
@@ -172,6 +179,7 @@ export const useChatThread = (tabId: string, assistantId: string, module: string
             timestamp: new Date().toISOString(),
             threadId: thread.id
         }
+
         setMessages((prev) => [...prev, thinkingMessage])
 
         if (!hasFile) {
@@ -184,26 +192,33 @@ export const useChatThread = (tabId: string, assistantId: string, module: string
                 textToUse,
                 (token) => {
                     // on ajoute le token au flux qui alimente le message « streaming »
-                    setStreamedResponse((prev) => prev + token);
+                    setStreamedResponse((prev) => prev + token)
 
                     if (first) {
-                        first = false;
+                        first = false
 
                         // on retire le placeholder une fois la mise-à-jour précédente enregistrée
                         setTimeout(() => {
-                            setMessages((prev) => prev.filter((m) => m.id !== 'thinking'));
-                        }, 0);
+                            setMessages((prev) => prev.filter((m) => m.id !== 'thinking'))
+                        }, 0)
                     }
                 },
 
                 workspaceSlug,
                 (name, args) => console.log('🛠️ Function call', name, args)
-            );
-
-
+            )
 
             if (fullResponse.trim().length > 0) {
-                const assistantRes = await ThreadService.sendMessageToThread(thread.id, [{ type: 'text', text: fullResponse }], 'assistant')
+                const assistantRes = await ThreadService.sendMessageToThread(
+                    thread.id,
+                    [
+                        {
+                            type: 'text',
+                            text: fullResponse
+                        }
+                    ],
+                    'assistant'
+                )
 
                 const assistantMessage: Message = {
                     id: assistantRes.id,
@@ -245,7 +260,16 @@ export const useChatThread = (tabId: string, assistantId: string, module: string
                     } else if (status.status === 'failed') {
                         clearInterval(interval)
                         console.error('❌ Run failed')
-                        setMessages((prev) => prev.map((m) => (m.id === 'thinking' ? { ...m, content: '❌ Erreur lors du traitement du fichier.' } : m)))
+                        setMessages((prev) =>
+                            prev.map((m) =>
+                                m.id === 'thinking'
+                                    ? {
+                                          ...m,
+                                          content: '❌ Erreur lors du traitement du fichier.'
+                                      }
+                                    : m
+                            )
+                        )
                     }
                 }, 2000)
             } catch (err) {
