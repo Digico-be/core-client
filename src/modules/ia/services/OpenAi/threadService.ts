@@ -1,16 +1,20 @@
 import {
     createThread,
-    deleteMessagesFromThread,
+    deleteMessagesFromThread, deleteThread,
     editMessageInThread,
     getMessagesFromThread,
-    sendStructuredMessageToThread,
-} from '../../helpers/api/threadApiHelper';
+    sendStructuredMessageToThread
+} from '../../helpers/api/threadApiHelper'
 import { ThreadMessageContent } from '../../models/thread';
 import { sanitizeThreadContent } from '../../utils/threadUtils';
 
 export class ThreadService {
     static async createThread(assistantId: string, module?: string): Promise<any> {
         return await createThread(assistantId, module);
+    }
+
+    static async deleteThread(threadId: string) {
+        return deleteThread(threadId)
     }
 
     static async sendMessageToThread(

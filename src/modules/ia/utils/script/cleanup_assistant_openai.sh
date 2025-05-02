@@ -1,6 +1,5 @@
 #!/bin/bash
 
-API_KEY=""
 API_URL="https://api.openai.com/v1"
 HEADERS=(
   -H "Authorization: Bearer $API_KEY"

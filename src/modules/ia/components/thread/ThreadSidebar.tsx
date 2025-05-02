@@ -1,37 +1,36 @@
-import { v4 as uuidv4 } from 'uuid'
+'use client';
 
-import { useThreadTabs } from '../../hooks/useThreadTabs'
+import React from 'react';
 
-interface ThreadSidebarProps {
-    tabId: string
-}
+import { useThreadTabsContext } from '../../hooks/useThreadTabsContext';
 
-export const ThreadSidebar: React.FC<ThreadSidebarProps> = ({ tabId }) => {
+export const ThreadSidebar: React.FC = () => {
     const {
         threads,
         activeThreadId,
         setActiveThreadId,
         addThread,
-        removeThread
-    } = useThreadTabs(tabId)
+        removeThread,
+    } = useThreadTabsContext();
 
     return (
         <div className="flex flex-col h-full p-4 gap-2 bg-white mr-2">
             <h2 className="text-lg font-semibold mb-2">Conversations</h2>
+
             <div className="flex-1 overflow-y-auto flex flex-col gap-2 min-h-0">
-                {threads.map(threadId => (
+                {threads.map((id: string) => (
                     <div
-                        key={threadId}
+                        key={id}
+                        onClick={() => setActiveThreadId(id)}
                         className={`px-3 py-2 rounded cursor-pointer text-sm flex justify-between items-center ${
-                            activeThreadId === threadId ? 'bg-white font-bold shadow' : 'hover:bg-gray-200'
+                            activeThreadId === id ? 'bg-white font-bold shadow' : 'hover:bg-gray-200'
                         }`}
-                        onClick={() => setActiveThreadId(threadId)}
                     >
-                        <span>Thread {threadId.slice(0, 4)}</span>
+                        <span>Thread {id.slice(0, 4)}</span>
                         <button
                             onClick={(e) => {
-                                e.stopPropagation()
-                                removeThread(threadId)
+                                e.stopPropagation();
+                                removeThread(id);
                             }}
                             className="text-xs text-red-500 hover:text-red-700"
                         >
@@ -43,9 +42,10 @@ export const ThreadSidebar: React.FC<ThreadSidebarProps> = ({ tabId }) => {
 
             <button
                 className="mt-4 bg-primary text-white text-sm px-3 py-2 rounded hover:bg-blue-600"
-                onClick={() => addThread(uuidv4())}
-            >Nouvelle conversation
+                onClick={addThread}
+            >
+                Nouvelle conversation
             </button>
         </div>
-    )
-}
+    );
+};

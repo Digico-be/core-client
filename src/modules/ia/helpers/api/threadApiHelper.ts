@@ -19,6 +19,7 @@ export const createThread = async (assistantId: string, module?: string) => {
     }
 }
 
+
 export const sendStructuredMessageToThread = async ({
     threadId,
     content,
@@ -75,6 +76,17 @@ export const getMessagesFromThread = async (threadId: string) => {
         throw error
     }
 }
+
+export const deleteThread = async (threadId: string) => {
+    const resp = await fetch(`/api/threads/${encodeURIComponent(threadId)}`, {
+        method: 'DELETE',
+    });
+
+    if (!resp.ok) {
+        const err = await resp.text();
+        throw new Error(`Échec suppression thread ${threadId} : ${err}`);
+    }
+};
 
 export const deleteMessagesFromThread = async (threadId: string, messageIds: string[]) => {
     try {

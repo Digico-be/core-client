@@ -2,24 +2,20 @@ import { NextResponse } from 'next/server';
 
 import OpenAI from 'openai';
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY!;
+const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 
-if (!OPENAI_API_KEY) {
-    throw new Error('The OPENAI_API_KEY environment variable is missing or empty');
-}
+export async function POST(req: Request) {
+    const { assistantId, module } = await req.json();
 
-const openai = new OpenAI({
-    apiKey: OPENAI_API_KEY,
-    baseURL: 'https://api.openai.com/v1',
-});
+    console.log('[API /api/threads] POST body:', { assistantId, module });
 
-export async function POST() {
     try {
-        // Création du thread
         const thread = await openai.beta.threads.create();
+        console.log('[API /api/threads] OpenAI thread created:', thread.id);
         return NextResponse.json(thread, { status: 200 });
-    } catch (error) {
-        console.error('Erreur lors de la création du thread:', error);
-        return NextResponse.json({ error: 'Échec de la création du thread' }, { status: 500 });
+    } catch (err: any) {
+        console.error('[API /api/threads] OpenAI create error:', err);
+        return NextResponse.json({ error: err.message }, { status: 500 });
     }
 }

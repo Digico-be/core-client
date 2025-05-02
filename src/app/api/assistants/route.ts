@@ -14,23 +14,29 @@ const openai = new OpenAI({
 });
 
 export async function POST(req: Request) {
-    const assistant = await req.json();  // On récupère les données envoyées par le frontend
+    const assistantData = await req.json();  // On récupère les données envoyées par le frontend
 
-    if (!assistant.model) {
+    if (!assistantData.model) {
         return NextResponse.json({ error: 'Le modèle est requis' }, { status: 400 });
     }
 
     try {
-        // Appel à l'API OpenAI pour créer un assistant
-        const response = await openai.beta.assistants.create({
-            instructions: assistant.instructions,
-            name: assistant.name,
-            tools: assistant.tools,
-            model: assistant.model,
+        const assistant = await openai.beta.assistants.create({
+            instructions: assistantData.instructions,
+            name: assistantData.name,
+            tools: assistantData.tools,
+            model: assistantData.model,
         });
 
-        // Retourner la réponse de l'API OpenAI
-        return NextResponse.json(response, { status: 200 });
+        return NextResponse.json({
+            id: assistant.id,
+            name: assistant.name,
+            description: assistant.description,
+            model: assistant.model,
+            instructions: assistant.instructions,
+            tools: assistant.tools
+        }, { status: 200 });
+
     } catch (error) {
         console.error('Erreur lors de la création de l\'assistant:', error);
         return NextResponse.json({ error: 'Échec de la création de l\'assistant' }, { status: 500 });

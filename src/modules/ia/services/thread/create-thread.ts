@@ -2,17 +2,19 @@ import { Thread } from '../../models/thread'
 
 import { HttpService } from './index'
 
-type LaravelThread = {
-    openai_id: string;
-    assistant_openai_id: string;
-    module?: string;
-    created_at: string;
+type LaravelThreadResponse = {
+    data: {
+        openai_id: string;
+        assistant_openai_id: string;
+        module?: string;
+        created_at: string;
+    };
 };
 
 export const createThread = async (
     openaiThreadId: string,
     assistantOpenAiId: string,
-    module?: string,
+    module?: string
 ): Promise<Thread> => {
     const payload = {
         openai_id: openaiThreadId,
@@ -21,13 +23,16 @@ export const createThread = async (
         created_at: new Date().toISOString(),
     };
 
-    const response = await HttpService.post<LaravelThread>('/', payload);
+    const res = await HttpService.post<LaravelThreadResponse>('/', payload);
+
+    const t = 'data' in res ? res.data : (res as any);   // ← fonctionne pour les 2 formats
 
     return {
-        id: response.openai_id,
-        assistantId: response.assistant_openai_id,
-        module: response.module,
-        createdAt: response.created_at,
+        id: t.openai_id,
+        assistantId: t.assistant_openai_id,
+        module: t.module,
+        createdAt: t.created_at,
     };
 };
+
 
