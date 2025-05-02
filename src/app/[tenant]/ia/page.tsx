@@ -4,7 +4,7 @@ import AssistantTabsManager from '../../../modules/ia/components/assistant/Assis
 
 export default function Index() {
     return (
-        <div className={"w-full h-full"}>
+        <div className="flex flex-col h-full">
             <AssistantTabsManager type="general" />
         </div>
     )

@@ -10,7 +10,7 @@ interface AssistantTabsManagerProps {
 
 const AssistantTabsManager: React.FC<AssistantTabsManagerProps> = ({ type }) => {
     return (
-        <div className="w-full">
+        <div className="flex flex-col flex-1 w-full overflow-hidden">
             <h1 className="text-3xl font-bold pb-6">
                 {type === 'general' ? 'Assistants Généraux' : 'Assistants Spécialisés'}
             </h1>

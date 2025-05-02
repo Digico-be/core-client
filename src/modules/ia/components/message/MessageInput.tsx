@@ -90,11 +90,11 @@ const MessageInput: React.FC<MessageInputProps> = ({
         }
     };
 
-    /** ─────── UI */
+
     return (
         <div className="flex flex-col h-full w-full p-4 overflow-x-hidden">
             {/* Zone messages scrollable */}
-            <div className="overflow-y-auto" style={{ height: 'calc(100vh - 30rem)' }}>
+            <div className="flex-1 overflow-y-auto">
                 <MessageList
                     messages={[
                         ...messages,

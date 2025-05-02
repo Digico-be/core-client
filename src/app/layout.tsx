@@ -17,7 +17,9 @@ export default function RootLayout({ children }: Props) {
     return (
         <html lang="fr">
             <body>
-                <QueryProvider>{children}</QueryProvider>
+                <QueryProvider>
+                    {children}
+                </QueryProvider>
                 <Toaster richColors position="bottom-right" />
             </body>
         </html>
