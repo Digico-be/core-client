@@ -148,7 +148,7 @@ const AssistantTabs: React.FC<AssistantTabsProps> = ({ type }) => {
 
     return (
         <>
-            <div className="flex items-center pb-8">
+            <div className="flex items-center bg-white mb-2">
                 {/* Flèche gauche */}
                 {canScrollLeft && (
                     <button

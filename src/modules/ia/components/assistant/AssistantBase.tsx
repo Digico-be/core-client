@@ -5,9 +5,9 @@ import { useAuth } from '@digico/utils';
 
 import { useAssistant } from '../../hooks/useAssistant';
 import { useChatThread } from '../../hooks/useChatThread';
+import { useThreadTabs } from '../../hooks/useThreadTabs'
 
 import { Message } from '../../models/message';
-import { ModuleType } from '../../models/module'
 import { Thread } from '../../models/thread';
 import MessageInput from '../message/MessageInput';
 
@@ -27,6 +27,8 @@ const AssistantBase: React.FC<AssistantBaseProps> = ({ module, tabId }) => {
     } = useAssistant(module, tabId);
     /** 2) Gestion du thread & des messages (dépend de l’assistant) */
     const { tenant } = useAuth();
+    const { activeThreadId } = useThreadTabs(tabId)
+
     const {
         messages,
         streamedResponse,
@@ -34,7 +36,8 @@ const AssistantBase: React.FC<AssistantBaseProps> = ({ module, tabId }) => {
         deleteMessage,
         editMessage,
         thread,
-    } = useChatThread(tabId, assistant?.openai_id ?? '', module, tenant?.name ?? '');
+    } = useChatThread(tabId, assistant?.openai_id ?? '', module, tenant?.name ?? '', activeThreadId ?? undefined);
+
 
     const [isDeleted] = useState(false);
 

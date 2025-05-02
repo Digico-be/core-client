@@ -20,7 +20,7 @@ type LaravelThread = {
     created_at: string
 }
 
-export const useChatThread = (tabId: string, assistantId: string, module: string, workspaceSlug: string) => {
+export const useChatThread = (tabId: string, assistantId: string, module: string, workspaceSlug: string, initialThreadId?: string) => {
     const [thread, setThread] = useState<Thread | null>(null)
     const [streamedResponse, setStreamedResponse] = useState<string>('')
 
@@ -52,7 +52,7 @@ export const useChatThread = (tabId: string, assistantId: string, module: string
         }
 
         /* 4. threadId déjà stocké ? ➜ on recharge */
-        const existingThreadId = SessionStorage.getThreadIdForTab(tabId)
+        const existingThreadId = initialThreadId ?? SessionStorage.getThreadIdForTab(tabId)
         if (existingThreadId) {
             try {
                 const { data } = await readThread(existingThreadId)

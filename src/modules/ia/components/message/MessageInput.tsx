@@ -94,7 +94,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
     return (
         <div className="flex flex-col h-full w-full p-4 overflow-x-hidden">
             {/* Zone messages scrollable */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto min-h-0">
                 <MessageList
                     messages={[
                         ...messages,
@@ -122,7 +122,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
             </div>
 
             {/* Zone input */}
-            <div className="w-full px-4">
+            <div className="mt-4">
                 <FileDropZone
                     onFileDrop={handleFileDrop}
                     onDragStateChange={(dragging) => setIsDragging(dragging)}
