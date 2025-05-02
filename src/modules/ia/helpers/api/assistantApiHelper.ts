@@ -25,6 +25,12 @@ export const createAssistant = async (assistant: {
         }
 
         const data = await response.json();
+
+        if (!data?.id) {
+            console.error('[createAssistant] Erreur : ID manquant dans la réponse de l’API', data)
+            throw new Error("Assistant OpenAI créé, mais sans ID.")
+        }
+
         return data;
     } catch (error) {
         console.error('Erreur lors de la création de l\'assistant:', error);

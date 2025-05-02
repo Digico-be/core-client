@@ -56,13 +56,13 @@ const AssistantBase: React.FC<AssistantBaseProps> = ({ module, tabId }) => {
                 <>
                     <h1 className="text-2xl font-bold text-center mb-4">{assistant.name}</h1>
                     <p className="text-center mb-6 text-grey">{assistant.description}</p>
-                    {/* Affichage de l'ID et du thread
+
                     <div className="text-xs text-center mb-6">
                         AssistantId:&nbsp;{assistant.openai_id}
                         <br />
                         ThreadId:&nbsp;{thread?.id ?? 'Aucun thread'}
                     </div>
-                       */}
+
                     {/* Zone de chat */}
                     <MessageInput
                         module={module}

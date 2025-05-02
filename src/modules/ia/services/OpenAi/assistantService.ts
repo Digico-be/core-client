@@ -13,24 +13,21 @@ export class AssistantService {
      * @param module Le nom du module (ex: 'billing', 'contact')
      * @returns L'assistant créé.
      */
-    static async createAssistant(module: string): Promise<Assistant> {
-        const assistant: Assistant = {
-            id: '',
+    static async createAssistant(module: string): Promise<{ id: string; name: string; description?: string; model?: string; instructions?: string; tools?: any[] }> {
+        const assistantOpenAi = await createAssistant({
             name: `${module.charAt(0).toUpperCase() + module.slice(1)} Assistant`,
             description: `Assistant spécialisé pour le module ${module}`,
             module,
-            instructions: `L'assistant est conçu pour répondre aux questions liées au module ${module}.`,
             model: 'gpt-4.1-2025-04-14',
+            instructions: `L'assistant est conçu pour répondre aux questions liées au module ${module}.`,
             tools: [...functionsDefinition, { type: 'file_search' }]
+        })
+
+        if (!assistantOpenAi?.id) {
+            throw new Error("Échec de la création OpenAI : id manquant")
         }
 
-        // Appel à l'API pour créer l'assistant
-        const result = await createAssistant(assistant)
-
-        return {
-            ...assistant,
-            id: result.id // L'ID récupéré depuis la réponse de l'API
-        }
+        return assistantOpenAi
     }
 
     /**
