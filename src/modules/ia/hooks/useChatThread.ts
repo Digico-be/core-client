@@ -56,15 +56,18 @@ export const useChatThread = (
         didInitRef.current = true;
     }, [initialThreadId, assistantId, module, tabId, loadMessages]);
 
-    /** ➜ 4. Si l’utilisateur sélectionne une autre conversation */
+    /* ---------- 4bis. Plus aucun thread actif (liste vide) ---------- */
     useEffect(() => {
-        if (thread && initialThreadId && thread.id !== initialThreadId) {
-            // Reset complet
+        // Si le thread actuel vient d’être supprimé et qu’il n’y a plus d’ID actif,
+        // on nettoie l’état local pour ne plus afficher l’ancienne conversation.
+        if (thread && !initialThreadId) {
+            console.log('[useChatThread] reset – plus de thread actif');
             setThread(null);
             setMessages([]);
             didInitRef.current = false;
         }
     }, [initialThreadId, thread, setMessages]);
+
 
     /* ---------- 5. Suppression thread ---------- */
     const removeThread = async (threadId: string) => {
