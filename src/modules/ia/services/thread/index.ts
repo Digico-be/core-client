@@ -5,6 +5,7 @@ export const HttpService = new HttpRequestBuilder(String(process.env.NEXT_PUBLIC
 export * from './create-thread'
 export * from './delete-thread'
 export * from './find-thread'
+export * from './list-threads'
 export * from './read-thread'
 
 

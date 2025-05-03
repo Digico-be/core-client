@@ -30,56 +30,75 @@ export const useChatThread = (
     const {
         messages,
         setMessages,
-        loadMessages,
         deleteMessage,
         editMessage,
     } = useThreadMessages();
 
-    /* ---------- 3. Init idempotent ---------- */
-    const didInitRef = useRef(false);
+    /* ---------- 3. (Re)chargement du thread + messages ---------- */
+    const lastSeqRef = useRef(0);
 
-    /** Initialise le thread local (une seule fois par ID) */
     useEffect(() => {
-        if (didInitRef.current || !initialThreadId) return;
+        if (!initialThreadId) return;
 
-        const local: Thread = {
-            id: initialThreadId,
+        const seq = ++lastSeqRef.current;
+        const id = initialThreadId;
+
+        console.log('[useChatThread] → changement de conversation →', id);
+
+        /* 3.1 État minimal immédiat */
+        setThread({
+            id,
             assistantId,
             module,
             createdAt: new Date().toISOString(),
-        };
-        setThread(local);
-        SessionStorage.setThreadIdForTab(tabId, local.id);
+        });
+        setMessages([]);
+        SessionStorage.setThreadIdForTab(tabId, id);
 
-        loadMessages(local.id).catch(console.error);
+        /* 3.2 Fetch messages (protégé contre les courses) */
+        (async () => {
+            try {
+                const raw = await ThreadService.getMessagesFromThread(id);
 
-        didInitRef.current = true;
-    }, [initialThreadId, assistantId, module, tabId, loadMessages]);
+                raw.sort(
+                    (a: any, b: any) => a.created_at - b.created_at
+                );
 
-    /* ---------- 4bis. Plus aucun thread actif (liste vide) ---------- */
+                if (lastSeqRef.current !== seq) return;        // course ?
+
+                const parsed: Message[] = raw.map((m: any) => ({
+                    id: m.id,
+                    sender: m.role === 'user' ? 'user' : 'assistant',
+                    content: m.content[0]?.text?.value ?? '',
+                    timestamp: new Date(m.created_at * 1000).toISOString(),
+                    threadId: id,
+                }));
+
+                setMessages(parsed);
+            } catch (err) {
+                console.error('[useChatThread] erreur chargement messages :', err);
+            }
+        })();
+    }, [initialThreadId]);      // ⇢ une exécution par changement de thread
+
+    /* ---------- 4. Aucun thread actif → reset UI ---------- */
     useEffect(() => {
-        // Si le thread actuel vient d’être supprimé et qu’il n’y a plus d’ID actif,
-        // on nettoie l’état local pour ne plus afficher l’ancienne conversation.
         if (thread && !initialThreadId) {
-            console.log('[useChatThread] reset – plus de thread actif');
             setThread(null);
             setMessages([]);
-            didInitRef.current = false;
         }
     }, [initialThreadId, thread, setMessages]);
-
 
     /* ---------- 5. Suppression thread ---------- */
     const removeThread = async (threadId: string) => {
         try {
-            await ThreadService.deleteThread(threadId);
-            await destroyThread(threadId);
+            await ThreadService.deleteThread(threadId);   // route Next.js
+            await destroyThread(threadId);                // DB Laravel
         } catch (e) {
             console.error('Erreur suppression thread', e);
         }
         SessionStorage.removeThreadIdForTab(tabId);
         setThread(null);
-        didInitRef.current = false;
     };
 
     /* ---------- 6. Envoi de message ---------- */
@@ -98,7 +117,7 @@ export const useChatThread = (
         const hasFile = !!attachments?.length;
         const attachmentIds = attachments?.map((f) => f.id) || [];
 
-        /* 6.1 Envoi user */
+        /* 6.1 message user (OpenAI + UI) */
         const userRes = await ThreadService.sendMessageToThread(
             thread.id,
             content,
@@ -123,7 +142,7 @@ export const useChatThread = (
         };
         if (!options.skipUserMessage) setMessages((p) => [...p, userMsg]);
 
-        /* 6.2 Liaison fichiers */
+        /* 6.2 liaison fichiers (pivot) */
         if (hasFile) {
             for (const f of attachments!) {
                 await createFileMessage({
@@ -134,7 +153,7 @@ export const useChatThread = (
             }
         }
 
-        /* 6.3 Message thinking */
+        /* 6.3 placeholder "thinking" */
         setMessages((p) => [
             ...p,
             {
@@ -146,9 +165,9 @@ export const useChatThread = (
             },
         ]);
 
-        /* 6.4 Réponse */
+        /* 6.4 réponse assistant */
         if (!hasFile) {
-            /* ---- Streaming texte ---- */
+            /* ---- streaming texte ---- */
             let first = true;
             const full = await StreamService.startStreamingResponse(
                 content.find((c) => c.type === 'text')?.text || '',
@@ -186,7 +205,7 @@ export const useChatThread = (
             }
             setStreamedResponse('');
         } else {
-            /* ---- Run + fichiers ---- */
+            /* ---- cas fichiers : run ---- */
             try {
                 const run = await RunService.startRun(thread.id, assistantId);
                 const intv = setInterval(async () => {
