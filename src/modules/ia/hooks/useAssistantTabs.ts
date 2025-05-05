@@ -21,14 +21,13 @@ export const useAssistantTabs = (type: 'general' | 'specialized') => {
     }, [tabs, activeTabId, type])
 
     const initTabsFromAssistants = async () => {
-        const response = await readAssistants({ module: type })
-        const assistants = response.data
-        const newTabs: AssistantTab[] = assistants.map((a) => ({
+        const assistants = await readAssistants({ module: type })
+        const newTabs: AssistantTab[] = assistants.map(a => ({
             id: a.openai_id,
             title: a.name,
             module: a.module,
-            type,
-        }));
+            type
+        }))
 
         setTabs(newTabs)
         setActiveTabId(newTabs[0]?.id ?? null)
@@ -39,6 +38,6 @@ export const useAssistantTabs = (type: 'general' | 'specialized') => {
         setTabs,
         activeTabId,
         setActiveTabId,
-        initTabsFromAssistants,
+        initTabsFromAssistants
     }
 }

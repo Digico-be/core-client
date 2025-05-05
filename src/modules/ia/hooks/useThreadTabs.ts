@@ -1,4 +1,4 @@
-import { useCallback,useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { ThreadService } from '../services/OpenAi/threadService'
 import { createThread as laravelCreateThread, listThreads } from '../services/thread'
@@ -28,24 +28,27 @@ export const useThreadTabs = (
 
     const hasAutoCreatedThread = useRef(false)
 
-    const addThreadInternal = useCallback(async (id: string, mod?: string) => {
-        if (sessionStorage.getItem(LOCK_KEY(tabId)) === 'true') return
+    /* création interne */
+    const addThreadInternal = useCallback(
+        async (id: string, mod?: string) => {
+            if (sessionStorage.getItem(LOCK_KEY(tabId)) === 'true') return
+            sessionStorage.setItem(LOCK_KEY(tabId), 'true')
 
-        sessionStorage.setItem(LOCK_KEY(tabId), 'true')
+            try {
+                const open = await ThreadService.createThread(id, mod)
+                const saved = await laravelCreateThread(open.id, id, mod)
+                const threadId = saved.id ?? open.id
+                setThreads(prev => [...prev, threadId])
+                setActiveThreadId(threadId)
+            } catch (err) {
+                console.error('[useThreadTabs] Erreur création thread :', err)
+                sessionStorage.removeItem(LOCK_KEY(tabId))
+            }
+        },
+        [tabId]
+    )
 
-        try {
-            const open = await ThreadService.createThread(id, mod)
-            const saved = await laravelCreateThread(open.id, id, mod)
-            const threadId = saved.id ?? open.id
-
-            setThreads(prev => [...prev, threadId])
-            setActiveThreadId(threadId)
-        } catch (error) {
-            console.error('[useThreadTabs] Erreur création thread :', error)
-            sessionStorage.removeItem(LOCK_KEY(tabId))
-        }
-    }, [tabId])
-
+    /* chargement initial */
     const loadThreads = useCallback(async () => {
         setIsLoading(true)
         setHasFetchedFromDB(false)
@@ -63,7 +66,7 @@ export const useThreadTabs = (
                     return
                 }
             } catch {
-                // 🔸 JSON invalide ou session corrompue → on ignore et on repart proprement
+                /* JSON invalide : on ignore et on repart proprement */
             }
         }
 
@@ -84,8 +87,8 @@ export const useThreadTabs = (
             } else {
                 sessionStorage.removeItem(LOCK_KEY(tabId))
             }
-        } catch (error) {
-            // Erreur de récupération de threads (ex: réseau) → non bloquant, on continue
+        } catch {
+            /* Récupération échouée: non bloquant, on continue */
         }
 
         setHasFetchedFromDB(true)
@@ -96,29 +99,34 @@ export const useThreadTabs = (
         loadThreads()
     }, [loadThreads])
 
+    /* persistance storage */
     useEffect(() => {
         sessionStorage.setItem(STORAGE_KEY(tabId), JSON.stringify({ threads, activeThreadId }))
     }, [threads, activeThreadId, tabId])
 
+    /* API */
     const addThread = useCallback(async () => {
         if (!assistantId || !hasFetchedFromDB) return
         await addThreadInternal(assistantId, module)
     }, [assistantId, module, hasFetchedFromDB, addThreadInternal])
 
-    const removeThread = useCallback(async (threadId: string) => {
-        try {
-            await ThreadService.deleteThread(threadId)
-        } catch (error) {
-            console.error('[useThreadTabs] Erreur suppression thread :', error)
-        }
+    const removeThread = useCallback(
+        async (threadId: string) => {
+            try {
+                await ThreadService.deleteThread(threadId)
+            } catch (err) {
+                console.error('[useThreadTabs] Erreur suppression thread :', err)
+            }
 
-        setThreads(prev => prev.filter(t => t !== threadId))
+            setThreads(prev => prev.filter(t => t !== threadId))
 
-        if (threadId === activeThreadId) {
-            const remaining = threads.filter(t => t !== threadId)
-            setActiveThreadId(remaining[0] ?? null)
-        }
-    }, [activeThreadId, threads])
+            if (threadId === activeThreadId) {
+                const remaining = threads.filter(t => t !== threadId)
+                setActiveThreadId(remaining[0] ?? null)
+            }
+        },
+        [activeThreadId, threads]
+    )
 
     return {
         threads,
