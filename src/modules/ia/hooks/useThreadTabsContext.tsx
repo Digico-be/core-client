@@ -1,41 +1,38 @@
-'use client';
+'use client'
 
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext } from 'react'
 
-import { useThreadTabs, UseThreadTabsReturn } from './useThreadTabs';
+import { useThreadTabs, UseThreadTabsReturn } from './useThreadTabs'
 
-/* ---------- Types ---------- */
-type Props =
+type ThreadTabsProviderProps =
     | { value: UseThreadTabsReturn; children: React.ReactNode }
-    | { children: React.ReactNode; tabId: string; assistantId?: string; module?: string };
+    | { tabId: string; assistantId?: string; module?: string; children: React.ReactNode }
 
-/* ---------- Contexte ---------- */
-const ThreadTabsCtx = createContext<UseThreadTabsReturn | null>(null);
+const ThreadTabsCtx = createContext<UseThreadTabsReturn | null>(null)
 
-export function ThreadTabsProvider(props: Props) {
-    /* Cas où un value est fourni (tests, preview…) */
-    if ('value' in props) {
-        return (
-            <ThreadTabsCtx.Provider value={props.value}>
-                {props.children}
-            </ThreadTabsCtx.Provider>
-        );
-    }
+export function ThreadTabsProvider(props: ThreadTabsProviderProps) {
+    const shouldUseHook = !('value' in props)
 
-    /* Cas normal */
-    const { tabId, assistantId, module, children } = props;
-    /* eslint-disable react-hooks/rules-of-hooks */
-    const value = useThreadTabs(tabId, assistantId, module);
-    /* eslint-enable react-hooks/rules-of-hooks */
+    // ⚠️ Toujours appeler le hook, même si on ne s’en sert pas
+    const hookValue = useThreadTabs(
+        shouldUseHook ? props.tabId : '',
+        shouldUseHook ? props.assistantId : undefined,
+        shouldUseHook ? props.module : undefined
+    )
 
-    return <ThreadTabsCtx.Provider value={value}>{children}</ThreadTabsCtx.Provider>;
+    const contextValue = shouldUseHook ? hookValue : props.value
+
+    return (
+        <ThreadTabsCtx.Provider value={contextValue}>
+            {props.children}
+        </ThreadTabsCtx.Provider>
+    )
 }
 
-/* ---------- Hook pratique ---------- */
-export function useThreadTabsContext() {
-    const ctx = useContext(ThreadTabsCtx);
-    if (!ctx) {
-        throw new Error('useThreadTabsContext must be used inside a <ThreadTabsProvider>');
+export function useThreadTabsContext(): UseThreadTabsReturn {
+    const context = useContext(ThreadTabsCtx)
+    if (!context) {
+        throw new Error('useThreadTabsContext must be used inside a <ThreadTabsProvider>')
     }
-    return ctx;
+    return context
 }

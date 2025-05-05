@@ -19,70 +19,55 @@ type OpenAiAssistant = {
 
 export const useAssistant = (module: string, tabId: string) => {
     const queryClient = useQueryClient()
-    const [assistantOpenAiId, setAssistantOpenAiId] = useState(() => SessionStorage.getAssistantOpenAiIdForTab(tabId))
+    const [assistantOpenAiId, setAssistantOpenAiId] = useState(() =>
+        SessionStorage.getAssistantOpenAiIdForTab(tabId)
+    )
 
     const query = useQuery<Assistant>({
         queryKey: ['assistant', tabId],
+        enabled: !!module && !!tabId,
+        staleTime: 5 * 60 * 1000,
         queryFn: async (): Promise<Assistant> => {
             const mustCreateNew = SessionStorage.isForceNewAssistant(tabId)
             if (mustCreateNew) {
-                SessionStorage.clearForceNewAssistant(tabId) // on consomme le flag
+                SessionStorage.clearForceNewAssistant(tabId)
             }
 
-            /* ──────────────────────────────────────────────────────────────
-             * 1.  L’onglet possède-t-il déjà un assistant mappé ?
-             * ────────────────────────────────────────────────────────────── */
             const cachedId = SessionStorage.getAssistantOpenAiIdForTab(tabId)
 
+            // ─── Cas 1 : assistant déjà mappé localement ───
             if (cachedId) {
-                // On va directement lire cet assistant depuis la DB
-                const resp = await readAssistants({ module })
-                const existing: Assistant[] = Array.isArray(resp) ? resp : (resp?.data ?? [])
+                const all = await readAssistants({ module })
+                const assistants: Assistant[] = Array.isArray(all) ? all : all?.data ?? []
 
-                const found = existing.find((a) => a.openai_id === cachedId)
-                if (found) {
+                const existing = assistants.find(a => a.openai_id === cachedId)
+                if (existing) {
                     setAssistantOpenAiId(cachedId)
-                    return found // ✅ même assistant, même thread
+                    return existing
                 }
 
-                // Mapping cassé : on le retire et on poursuivra en créant un neuf
                 SessionStorage.removeAssistantOpenAiIdForTab(tabId)
             }
 
-            /* ────────────────────────────────────────────────
-             * 2.  Pas (ou plus) de mapping local
-             *     ➜ peut-on réutiliser un assistant existant ?
-             * ──────────────────────────────────────────────── */
+            // ─── Cas 2 : réutilisation possible d'un assistant existant ───
             if (!cachedId && !mustCreateNew) {
-                // 1) on récupère TOUS les assistants de l’utilisateur
-                const resp = await readAssistants();           // ⬅️  plus de filtre côté API
-                const all: Assistant[] = Array.isArray(resp) ? resp : resp?.data ?? [];
+                const resp = await readAssistants()
+                const all: Assistant[] = Array.isArray(resp) ? resp : resp?.data ?? []
 
-                // 2) on garde uniquement ceux du même module
-                const existing = all.filter(a => a.module === module);
-
-                // 3) on élimine ceux déjà mappés à un onglet ouvert
-                const usedIds = Object.values(SessionStorage.getAssistantOpenAiIdMapping());
-                const available = existing.find(a => !usedIds.includes(a.openai_id));
+                const available = all
+                    .filter(a => a.module === module)
+                    .find(a => !Object.values(SessionStorage.getAssistantOpenAiIdMapping()).includes(a.openai_id))
 
                 if (available) {
-                    SessionStorage.setAssistantOpenAiIdForTab(tabId, available.openai_id);
-                    setAssistantOpenAiId(available.openai_id);
-
-                    // pas de flag assistant_created → useChatThread tentera
-                    // de reprendre l’ancien thread s’il existe
-                    return available;
+                    SessionStorage.setAssistantOpenAiIdForTab(tabId, available.openai_id)
+                    setAssistantOpenAiId(available.openai_id)
+                    return available
                 }
             }
 
-
-
-
-            /* ────────────────────────────────────────────────
-             * 3.  Création d’un nouvel assistant (cas par défaut)
-             * ──────────────────────────────────────────────── */
-            const nameForOA = mustCreateNew ? `${module}-${crypto.randomUUID()}` : module
-            const newOA = (await AssistantService.createAssistant(nameForOA)) as unknown as OpenAiAssistant
+            // ─── Cas 3 : création d’un nouvel assistant ───
+            const assistantName = mustCreateNew ? `${module}-${crypto.randomUUID()}` : module
+            const newOA = (await AssistantService.createAssistant(assistantName)) as OpenAiAssistant
 
             const saved = await createAssistant({
                 openai_id: newOA.id,
@@ -95,13 +80,11 @@ export const useAssistant = (module: string, tabId: string) => {
             })
 
             SessionStorage.setAssistantOpenAiIdForTab(tabId, saved.openai_id)
-            SessionStorage.setAssistantCreatedForTab(tabId) // ⬅ thread neuf obligatoire
+            SessionStorage.setAssistantCreatedForTab(tabId)
             setAssistantOpenAiId(saved.openai_id)
 
             return saved
-        },
-        enabled: !!module && !!tabId,
-        staleTime: 5 * 60 * 1000
+        }
     })
 
     const deleteMutation = useMutation({
