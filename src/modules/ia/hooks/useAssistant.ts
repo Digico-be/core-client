@@ -84,16 +84,6 @@ export const useAssistant = (module: string, tabId: string) => {
             const nameForOA = mustCreateNew ? `${module}-${crypto.randomUUID()}` : module
             const newOA = (await AssistantService.createAssistant(nameForOA)) as unknown as OpenAiAssistant
 
-            console.log('✅ Payload envoyé à Laravel (createAssistant):', {
-                openai_id: newOA.id,
-                name: newOA.name,
-                description: newOA.description ?? '',
-                module,
-                model: newOA.model,
-                instructions: newOA.instructions,
-                tools: newOA.tools
-            })
-
             const saved = await createAssistant({
                 openai_id: newOA.id,
                 name: newOA.name,

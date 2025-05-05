@@ -40,7 +40,6 @@ export const useThreadTabs = (
                 const { threads: saved, activeThreadId: savedActive } = JSON.parse(raw);
                 setThreads(saved);
                 setActiveThreadId(savedActive);
-                console.log('[useThreadTabs] Récupéré depuis sessionStorage:', saved, savedActive);
 
                 if (saved.length > 0) {
                     sessionStorage.removeItem(LOCK_KEY(tabId));
@@ -56,13 +55,11 @@ export const useThreadTabs = (
                     const ids = found.map((t) => t.id);
                     setThreads(ids);
                     setActiveThreadId(ids[0] ?? null);
-                    console.log('[useThreadTabs] Threads depuis DB:', ids);
 
                     if (ids.length > 0) {
                         sessionStorage.removeItem(LOCK_KEY(tabId));
                     } else if (!hasAutoCreatedThread.current) {
                         hasAutoCreatedThread.current = true;
-                        console.log('[useThreadTabs] Aucun thread => création automatique');
                         await addThreadInternal(assistantId, module);
                     }
                 } catch (err) {
@@ -87,7 +84,6 @@ export const useThreadTabs = (
     const addThreadInternal = async (id: string, mod?: string) => {
         const isLocked = sessionStorage.getItem(LOCK_KEY(tabId));
         if (isLocked === 'true') {
-            console.log('[useThreadTabs] Création déjà en cours');
             return;
         }
 
@@ -98,10 +94,8 @@ export const useThreadTabs = (
             const saved = await laravelCreateThread(open.id, id, mod);
             const threadId = saved.id ?? open.id;
 
-            console.log('[useThreadTabs] Thread créé:', threadId);
-
             setThreads((prev) => [...prev, threadId]);
-            setActiveThreadId(threadId); // 👈 Important
+            setActiveThreadId(threadId);
         } catch (error) {
             console.error('[useThreadTabs] Erreur création thread', error);
             sessionStorage.removeItem(LOCK_KEY(tabId));
@@ -118,11 +112,9 @@ export const useThreadTabs = (
     };
 
     const removeThread = async (threadId: string) => {
-        console.log('[useThreadTabs] Suppression thread', threadId);
 
         try {
             await ThreadService.deleteThread(threadId);
-            console.log('[useThreadTabs] Supprimé côté serveur');
         } catch (err) {
             console.error('[useThreadTabs] Échec suppression', err);
         }
@@ -133,11 +125,6 @@ export const useThreadTabs = (
             setActiveThreadId(remaining[0] ?? null);
         }
     };
-
-    // 💡 Debug pour activeThreadId
-    useEffect(() => {
-        console.log('[useThreadTabs] activeThreadId changé :', activeThreadId);
-    }, [activeThreadId]);
 
     return {
         threads,

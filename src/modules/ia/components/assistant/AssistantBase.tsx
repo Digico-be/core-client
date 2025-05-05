@@ -39,14 +39,9 @@ const AssistantBase: React.FC<Props> = ({ module, tabId }) => {
     useEffect(() => {
         if (!assistant?.openai_id || threadsLoading) return;
         if (threads.length === 0) {
-            console.log('[AssistantBase] Aucun thread => création…');
             addThread();
         }
     }, [assistant?.openai_id, threads.length, threadsLoading, addThread]);
-
-    useEffect(() => {
-        console.log('[AssistantBase] activeThreadId:', activeThreadId);
-    }, [activeThreadId]);
 
     if (isLoading) return <p className="p-4 text-center">Chargement…</p>;
     if (isError || !assistant)

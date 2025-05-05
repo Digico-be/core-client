@@ -13,7 +13,6 @@ export const waitForRunCompletion = async (
 
     while (attempts < maxAttempts) {
         const run = await RunService.getStatus(threadId, runId);
-        console.log("Statut du run:", run.status, run);
 
         if (run.status === 'cancelled') {
             console.log("⛔ Run annulé, on sort.");
@@ -22,7 +21,6 @@ export const waitForRunCompletion = async (
 
         if (run.status === 'completed') {
             const messages = await ThreadService.getMessagesFromThread(threadId);
-            console.log('[DEBUG] Messages reçus du thread:', messages);
 
             const sortedMessages = [...messages].sort((a, b) => a.created_at - b.created_at);
             const lastAssistantMsg = sortedMessages.reverse().find((msg) => msg.role === 'assistant');
@@ -31,7 +29,7 @@ export const waitForRunCompletion = async (
                 console.warn('❌ Aucun message assistant trouvé');
                 return null;
             }
-            console.log("Message assistant trouvé:", lastAssistantMsg);
+            
             const content = lastAssistantMsg.content?.[0]?.text?.value;
 
             if (!content) {

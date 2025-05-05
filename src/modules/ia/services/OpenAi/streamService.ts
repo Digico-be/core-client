@@ -7,7 +7,6 @@ export const StreamService = {
         workspace: string,
         onFunctionCall?: (name: string, args: string) => void
     ): Promise<string> => {
-        console.log("Token : ")
         const reader = await StreamApiHelper.streamMessageToAssistant(message, workspace);
         const decoder = new TextDecoder();
         let fullResponse = '';

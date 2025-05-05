@@ -13,9 +13,6 @@ export class RunService {
             metadata?: Record<string, string>;
         }
     ): Promise<any> {
-        console.log("Démarrage d’un run pour le thread:", threadId);
-        console.log("Assistant ID:", assistantId);
-
         return await createRun(threadId, assistantId, options);
     }
 

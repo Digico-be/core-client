@@ -11,9 +11,6 @@ export async function DELETE(
     req: NextRequest,
     ctx: { params: Record<string, string | string[]> }
 ) {
-    /* ------------------------------------------------- */
-    console.log('[API] ctx.params =', ctx.params);
-    /* ------------------------------------------------- */
 
     // ➜ 1.récupère l’id, même si Next n’injecte pas correctement:
     const threadId =
@@ -28,12 +25,10 @@ export async function DELETE(
     try {
         /* OpenAI ----------------------------- */
         await openai.beta.threads.del(threadId as string);
-        console.log('[API] ✓ supprimé chez OpenAI');
 
         /* Laravel/DB ----------------------- */
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
         await fetch(`${apiUrl}/api/threads/${threadId}`, { method: 'DELETE' });
-        console.log('[API] ✓ supprimé dans la DB');
 
         /* OK -------------------------------- */
         return new NextResponse(null, { status: 204 });

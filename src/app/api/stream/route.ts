@@ -3,8 +3,6 @@ import { createLangChainAgent } from '../../../modules/ia/utils/langchainAgent'
 export async function POST(req: Request) {
     const { message, workspace } = await req.json();
 
-    console.log("📨 [API/stream] Requête entrante :", { message, workspace });
-
     try {
         const agent = await createLangChainAgent(workspace);
         const result = await agent.invoke({ input: message });
