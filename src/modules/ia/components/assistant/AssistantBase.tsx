@@ -1,11 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '@digico/utils';
 
 import { useAssistant } from '../../hooks/useAssistant';
 import { useChatThread } from '../../hooks/useChatThread';
-import { useThreadTabsContext } from '../../hooks/useThreadTabsContext'
+import { useThreadTabsContext } from '../../hooks/useThreadTabsContext';
 
 import { Message } from '../../models/message';
 import { Thread } from '../../models/thread';
@@ -17,19 +17,10 @@ interface Props {
 }
 
 const AssistantBase: React.FC<Props> = ({ module, tabId }) => {
-    /** 1) Chargement / création de l’assistant */
-    const {
-        data: assistant,
-        isLoading,
-        isError,
-        error,
-    } = useAssistant(module, tabId);
-
-    /** 2) Thread actif depuis le contexte */
-    const { activeThreadId } = useThreadTabsContext();
-
-    /** 3) Hook chat */
+    const { data: assistant, isLoading, isError, error } = useAssistant(module, tabId);
+    const { activeThreadId, threads, addThread, isLoading: threadsLoading } = useThreadTabsContext();
     const { tenant } = useAuth();
+
     const {
         messages,
         streamedResponse,
@@ -45,7 +36,18 @@ const AssistantBase: React.FC<Props> = ({ module, tabId }) => {
         activeThreadId ?? undefined
     );
 
-    /* ---------- Rendu ---------- */
+    useEffect(() => {
+        if (!assistant?.openai_id || threadsLoading) return;
+        if (threads.length === 0) {
+            console.log('[AssistantBase] Aucun thread => création…');
+            addThread();
+        }
+    }, [assistant?.openai_id, threads.length, threadsLoading, addThread]);
+
+    useEffect(() => {
+        console.log('[AssistantBase] activeThreadId:', activeThreadId);
+    }, [activeThreadId]);
+
     if (isLoading) return <p className="p-4 text-center">Chargement…</p>;
     if (isError || !assistant)
         return (
@@ -53,6 +55,9 @@ const AssistantBase: React.FC<Props> = ({ module, tabId }) => {
                 {(error as Error)?.message ?? 'Erreur'}
             </p>
         );
+
+    if (!activeThreadId || !thread)
+        return <p className="p-4 text-center">Chargement du thread…</p>;
 
     return (
         <div className="bg-white pt-4 flex flex-col flex-1 overflow-hidden">
@@ -74,7 +79,7 @@ const AssistantBase: React.FC<Props> = ({ module, tabId }) => {
                 sendMessage={sendMessage}
                 deleteMessage={deleteMessage}
                 editMessage={editMessage}
-                thread={thread as Thread | null}
+                thread={thread as Thread}
             />
         </div>
     );

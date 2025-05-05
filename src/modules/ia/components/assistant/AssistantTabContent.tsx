@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { useAssistant } from '../../hooks/useAssistant';
-import { ThreadTabsProvider } from '../../hooks/useThreadTabsContext'
+import { useThreadTabs } from '../../hooks/useThreadTabs';
+import { ThreadTabsProvider } from '../../hooks/useThreadTabsContext';
 
 import { ThreadSidebar } from '../thread/ThreadSidebar';
 
@@ -18,25 +19,50 @@ interface Props {
 const AssistantTabContent: React.FC<Props> = ({ tabId, module }) => {
     const {
         data: assistant,
-        isLoading,
+        isLoading: assistantLoading,
         isError,
         error,
     } = useAssistant(module, tabId);
 
-    if (isLoading) return <p className="p-4 text-center">Chargement…</p>;
-    if (isError || !assistant)
+    const threadTabs = useThreadTabs(tabId, assistant?.openai_id, module);
+    const { threads, addThread, isLoading: threadsLoading, hasFetchedFromDB } = threadTabs;
+
+    const [threadReady, setThreadReady] = useState(false);
+
+    useEffect(() => {
+        console.debug('[useThreadTabs] threads.length:', threads.length);
+
+        // On attend assistant + hasFetchedFromDB + threads non null
+        if (!assistant || threadsLoading || !hasFetchedFromDB) return;
+
+        // Evite double appel si déjà prêt
+        if (threadReady) return;
+
+        // 🔒 Sécurité : si threads !== undefined mais vide
+        if (threads.length === 0) {
+            console.debug('[AssistantTabContent] Aucun thread, création…');
+            addThread().then(() => setThreadReady(true));
+        } else {
+            console.debug('[AssistantTabContent] Thread déjà existant');
+            setThreadReady(true);
+        }
+    }, [assistant, threads.length, threadsLoading, hasFetchedFromDB, threadReady, addThread]);
+
+    // ✅ Ne pas afficher tant que tout n’est pas prêt
+    if (assistantLoading || threadsLoading || !threadReady) {
+        return <p className="p-4 text-center">Chargement…</p>;
+    }
+
+    if (isError || !assistant) {
         return (
             <p className="p-4 text-center text-red-500">
                 {(error as Error)?.message ?? 'Erreur de chargement'}
             </p>
         );
+    }
 
     return (
-        <ThreadTabsProvider
-            tabId={tabId}
-            assistantId={assistant.openai_id}
-            module={module}
-        >
+        <ThreadTabsProvider value={threadTabs}>
             <div className="flex flex-row h-full min-h-0">
                 <div className="w-[300px] bg-gray-50">
                     <ThreadSidebar />
