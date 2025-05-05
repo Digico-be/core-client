@@ -1,5 +1,3 @@
-'use client';
-
 import { useEffect, useRef, useState } from 'react';
 
 import { createFileMessage } from '../services/file_message';
@@ -22,19 +20,16 @@ export const useChatThread = (
     workspaceSlug: string,
     initialThreadId?: string
 ) => {
-    /* ---------- 1. État principal ---------- */
     const [thread, setThread] = useState<Thread | null>(null);
     const [streamedResponse, setStreamedResponse] = useState('');
 
-    /* ---------- 2. Messages ---------- */
     const {
         messages,
         setMessages,
         deleteMessage,
-        editMessage,
+        editMessage: baseEditMessage,
     } = useThreadMessages();
 
-    /* ---------- 3. (Re)chargement du thread + messages ---------- */
     const lastSeqRef = useRef(0);
 
     useEffect(() => {
@@ -43,9 +38,6 @@ export const useChatThread = (
         const seq = ++lastSeqRef.current;
         const id = initialThreadId;
 
-        console.log('[useChatThread] → changement de conversation →', id);
-
-        /* 3.1 État minimal immédiat */
         setThread({
             id,
             assistantId,
@@ -55,16 +47,13 @@ export const useChatThread = (
         setMessages([]);
         SessionStorage.setThreadIdForTab(tabId, id);
 
-        /* 3.2 Fetch messages (protégé contre les courses) */
         (async () => {
             try {
                 const raw = await ThreadService.getMessagesFromThread(id);
 
-                raw.sort(
-                    (a: any, b: any) => a.created_at - b.created_at
-                );
+                raw.sort((a: any, b: any) => a.created_at - b.created_at);
 
-                if (lastSeqRef.current !== seq) return;        // course ?
+                if (lastSeqRef.current !== seq) return;
 
                 const parsed: Message[] = raw.map((m: any) => ({
                     id: m.id,
@@ -79,9 +68,8 @@ export const useChatThread = (
                 console.error('[useChatThread] erreur chargement messages :', err);
             }
         })();
-    }, [initialThreadId]);      // ⇢ une exécution par changement de thread
+    }, [initialThreadId]);
 
-    /* ---------- 4. Aucun thread actif → reset UI ---------- */
     useEffect(() => {
         if (thread && !initialThreadId) {
             setThread(null);
@@ -89,11 +77,10 @@ export const useChatThread = (
         }
     }, [initialThreadId, thread, setMessages]);
 
-    /* ---------- 5. Suppression thread ---------- */
     const removeThread = async (threadId: string) => {
         try {
-            await ThreadService.deleteThread(threadId);   // route Next.js
-            await destroyThread(threadId);                // DB Laravel
+            await ThreadService.deleteThread(threadId);
+            await destroyThread(threadId);
         } catch (e) {
             console.error('Erreur suppression thread', e);
         }
@@ -101,7 +88,6 @@ export const useChatThread = (
         setThread(null);
     };
 
-    /* ---------- 6. Envoi de message ---------- */
     const sendMessage = async (
         input: string | ThreadMessageContent[],
         attachments?: IAFile[],
@@ -117,7 +103,6 @@ export const useChatThread = (
         const hasFile = !!attachments?.length;
         const attachmentIds = attachments?.map((f) => f.id) || [];
 
-        /* 6.1 message user (OpenAI + UI) */
         const userRes = await ThreadService.sendMessageToThread(
             thread.id,
             content,
@@ -142,7 +127,6 @@ export const useChatThread = (
         };
         if (!options.skipUserMessage) setMessages((p) => [...p, userMsg]);
 
-        /* 6.2 liaison fichiers (pivot) */
         if (hasFile) {
             for (const f of attachments!) {
                 await createFileMessage({
@@ -153,7 +137,6 @@ export const useChatThread = (
             }
         }
 
-        /* 6.3 placeholder "thinking" */
         setMessages((p) => [
             ...p,
             {
@@ -165,9 +148,7 @@ export const useChatThread = (
             },
         ]);
 
-        /* 6.4 réponse assistant */
         if (!hasFile) {
-            /* ---- streaming texte ---- */
             let first = true;
             const full = await StreamService.startStreamingResponse(
                 content.find((c) => c.type === 'text')?.text || '',
@@ -205,14 +186,26 @@ export const useChatThread = (
             }
             setStreamedResponse('');
         } else {
-            /* ---- cas fichiers : run ---- */
             try {
                 const run = await RunService.startRun(thread.id, assistantId);
                 const intv = setInterval(async () => {
                     const status = await RunService.getStatus(thread.id, run.id);
                     if (status.status === 'completed') {
                         clearInterval(intv);
-                        const all = await ThreadService.getMessagesFromThread(thread.id);
+                        let all: any[] = [];
+                        try {
+                            all = await ThreadService.getMessagesFromThread(thread.id);
+                        } catch (err) {
+                            console.error('Erreur après startRun lors du fetch des messages :', err);
+                            setMessages((prev) =>
+                                prev.map((m) =>
+                                    m.id === 'thinking'
+                                        ? { ...m, content: '❌ Une erreur est survenue (messages non récupérés).' }
+                                        : m
+                                )
+                            );
+                            return;
+                        }
                         const msg = all.find((m) => m.role === 'assistant');
                         if (msg) {
                             setMessages((prev) => [
@@ -246,7 +239,66 @@ export const useChatThread = (
         }
     };
 
-    /* ---------- 7. Retour hook ---------- */
+    // ✅ Ajout ici : re-génération après édition de message
+    const editMessage = async (
+        threadId: string,
+        messageId: string,
+        newContent: string
+    ) => {
+        await baseEditMessage(threadId, messageId, newContent);
+
+        if (!thread?.id) return;
+
+        setStreamedResponse('');
+        setMessages((prev) => [
+            ...prev,
+            {
+                id: 'thinking',
+                sender: 'assistant',
+                content: '🤖 L’assistant réfléchit...',
+                timestamp: new Date().toISOString(),
+                threadId,
+            },
+        ]);
+
+        let first = true;
+        const full = await StreamService.startStreamingResponse(
+            newContent,
+            (tok) => {
+                setStreamedResponse((prev) => prev + tok);
+                if (first) {
+                    first = false;
+                    setTimeout(() => {
+                        setMessages((p) => p.filter((m) => m.id !== 'thinking'));
+                    }, 0);
+                }
+            },
+            workspaceSlug,
+            () => {}
+        );
+
+        if (full.trim()) {
+            const aRes = await ThreadService.sendMessageToThread(
+                thread.id,
+                [{ type: 'text', text: full }],
+                'assistant'
+            );
+            setMessages((p) => [
+                ...p,
+                {
+                    id: aRes.id,
+                    sender: 'assistant',
+                    content: full,
+                    timestamp: new Date(aRes.created_at * 1000).toISOString(),
+                    threadId: thread.id,
+                },
+            ]);
+        } else {
+            setMessages((p) => p.filter((m) => m.id !== 'thinking'));
+        }
+        setStreamedResponse('');
+    };
+
     return {
         messages,
         streamedResponse,
