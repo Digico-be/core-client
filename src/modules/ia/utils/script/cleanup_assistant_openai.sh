@@ -6,7 +6,7 @@ HEADERS=(
   -H "OpenAI-Beta: assistants=v2"
 )
 
-echo "=== Suppression complète de tous les assistants ==="
+echo "=== Suppression complète de tous les assistants === "
 
 while true; do
   RESPONSE=$(curl -s "$API_URL/assistants" "${HEADERS[@]}")
