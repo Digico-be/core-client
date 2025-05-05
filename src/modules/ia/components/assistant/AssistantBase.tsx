@@ -75,6 +75,7 @@ const AssistantBase: React.FC<Props> = ({ module, tabId }) => {
                 deleteMessage={deleteMessage}
                 editMessage={editMessage}
                 thread={thread as Thread}
+                compact={tabId === 'floating-window-general'}
             />
         </div>
     );

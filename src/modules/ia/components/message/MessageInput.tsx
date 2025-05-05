@@ -1,103 +1,96 @@
-'use client';
+'use client'
 
-import React, { useState } from 'react';
-import { clsx } from 'clsx';
-import { toast } from 'sonner';
+import React, { useState } from 'react'
+import { clsx } from 'clsx'
+import { toast } from 'sonner'
 
-import { useFileUpload } from '../../hooks/useFileUpload';
+import { useFileUpload } from '../../hooks/useFileUpload'
 
-import { IAFile } from '../../models/file';
-import { Message } from '../../models/message';
-import { Thread, ThreadMessageContent } from '../../models/thread';
-import FileDropZone from '../file/FileDropZone';
+import { IAFile } from '../../models/file'
+import { Message } from '../../models/message'
+import { Thread, ThreadMessageContent } from '../../models/thread'
+import FileDropZone from '../file/FileDropZone'
 
-import MessageList from './MessageList';
+import MessageList from './MessageList'
 
 interface MessageInputProps {
-    module: string;
-    assistantId: string;
-    tabId: string;
-
-    messages: Message[];
-    streamedResponse: string;
+    module: string
+    assistantId: string
+    tabId: string
+    messages: Message[]
+    streamedResponse: string
     sendMessage: (
         input: string | ThreadMessageContent[],
         attachments?: IAFile[],
         options?: { skipUserMessage?: boolean; skipAssistantMessage?: boolean }
-    ) => Promise<void>;
-    deleteMessage: (threadId: string, messageId: string) => Promise<void>;
-    editMessage: (threadId: string, messageId: string, newContent: string) => Promise<void>;
-    thread: Thread | null;
+    ) => Promise<void>
+    deleteMessage: (threadId: string, messageId: string) => Promise<void>
+    editMessage: (threadId: string, messageId: string, newContent: string) => Promise<void>
+    thread: Thread | null
+    compact?: boolean
 }
 
-const MessageInput: React.FC<MessageInputProps> = ({
-                                                       messages,
-                                                       streamedResponse,
-                                                       sendMessage,
-                                                       deleteMessage,
-                                                       editMessage,
-                                                       thread,
-                                                   }) => {
-    const { uploadFile } = useFileUpload();
+const MessageInput: React.FC<MessageInputProps> = ({ messages, streamedResponse, sendMessage, deleteMessage, editMessage, thread, compact }) => {
+    const { uploadFile } = useFileUpload()
 
-    const [userQuery, setUserQuery] = useState('');
-    const [pendingFile, setPendingFile] = useState<IAFile | null>(null);
-    const [isDragging, setIsDragging] = useState(false);
-    const [isLocked, setIsLocked] = useState(false);
+    const [userQuery, setUserQuery] = useState('')
+    const [pendingFile, setPendingFile] = useState<IAFile | null>(null)
+    const [isDragging, setIsDragging] = useState(false)
+    const [isLocked, setIsLocked] = useState(false)
 
-    const isSending = streamedResponse.length > 0;
-    const hasThread = !!thread?.id;
+    const isSending = streamedResponse.length > 0
+    const hasThread = !!thread?.id
 
     const handleSend = async () => {
         if (!hasThread) {
-            toast.error('La conversation n’est pas encore prête.');
-            return;
+            toast.error('La conversation n’est pas encore prête.')
+            return
         }
 
-        const hasText = userQuery.trim() !== '';
-        const hasFile = pendingFile !== null;
+        const hasText = userQuery.trim() !== ''
+        const hasFile = pendingFile !== null
 
-        if (isSending || isLocked) return;
+        if (isSending || isLocked) return
 
         if (!hasText && hasFile) {
-            toast.error('Vous devez poser une question avec le fichier.');
-            return;
+            toast.error('Vous devez poser une question avec le fichier.')
+            return
         }
         if (!hasText && !hasFile) {
-            toast.error('Veuillez saisir une question ou ajouter un fichier.');
-            return;
+            toast.error('Veuillez saisir une question ou ajouter un fichier.')
+            return
         }
 
-        const content: ThreadMessageContent[] = [];
-        if (hasText) content.push({ type: 'text', text: userQuery.trim() });
-        if (hasFile && !hasText) content.push({ type: 'text', text: '📎 Fichier joint' });
+        const content: ThreadMessageContent[] = []
+        if (hasText) content.push({ type: 'text', text: userQuery.trim() })
+        if (hasFile && !hasText) content.push({ type: 'text', text: '📎 Fichier joint' })
 
-        const attachments = hasFile ? [pendingFile!] : undefined;
+        const attachments = hasFile ? [pendingFile!] : undefined
 
-        setIsLocked(true);
-        await sendMessage(content, attachments);
-        setIsLocked(false);
+        setIsLocked(true)
+        await sendMessage(content, attachments)
+        setIsLocked(false)
 
-        setUserQuery('');
-        setPendingFile(null);
-    };
+        setUserQuery('')
+        setPendingFile(null)
+    }
 
     const handleFileDrop = async (file: File) => {
         if (!hasThread) {
-            toast.error('La conversation n’est pas encore prête.');
-            return;
+            toast.error('La conversation n’est pas encore prête.')
+            return
         }
 
-        toast.info(`📥 Dépôt de fichier : ${file.name}`);
-        const uploaded = await uploadFile(file);
+        toast.info(`📥 Dépôt de fichier : ${file.name}`)
+        const uploaded = await uploadFile(file)
 
         if (uploaded) {
-            toast.success('✅ Fichier uploadé');
-            setPendingFile(uploaded);
+            toast.success('✅ Fichier uploadé')
+            setPendingFile(uploaded)
         } else {
-            toast.error('❌ Échec de l’upload');
+            toast.error('❌ Échec de l’upload')
         }
-    };
+    }
 
     // @ts-ignore
     return (
@@ -108,45 +101,39 @@ const MessageInput: React.FC<MessageInputProps> = ({
                         ...messages,
                         ...(streamedResponse
                             ? [
-                                {
-                                    id: 'streaming',
-                                    content: streamedResponse,
-                                    sender: 'assistant' as const,
-                                    timestamp: new Date().toISOString(),
-                                },
-                            ]
-                            : []),
+                                  {
+                                      id: 'streaming',
+                                      content: streamedResponse,
+                                      sender: 'assistant' as const,
+                                      timestamp: new Date().toISOString()
+                                  }
+                              ]
+                            : [])
                     ]}
                     onDeleteMessage={async (id) => {
-                        if (thread?.id) await deleteMessage(thread.id, id);
+                        if (thread?.id) await deleteMessage(thread.id, id)
                     }}
                     onEditMessage={async (id, txt) => {
                         if (thread?.id) {
-                            await editMessage(thread.id, id, txt);
+                            await editMessage(thread.id, id, txt)
                         }
                     }}
                 />
             </div>
 
             <div className="mt-4">
-                <FileDropZone
-                    onFileDrop={handleFileDrop}
-                    onDragStateChange={(dragging) => setIsDragging(dragging)}
-                    disabled={!hasThread}
-                >
+                <FileDropZone onFileDrop={handleFileDrop} onDragStateChange={(dragging) => setIsDragging(dragging)} disabled={!hasThread}>
                     <div
                         className={clsx(
                             'flex gap-2 mt-4 items-center border p-2 rounded-lg transition-all duration-200',
                             isDragging && 'border-blue-500 bg-blue-50 shadow-md cursor-copy',
                             !hasThread && 'opacity-50 cursor-not-allowed'
-                        )}
-                    >
+                        )}>
                         <button
                             type="button"
                             onClick={() => document.getElementById('fileInput')?.click()}
-                            className="px-3 py-2 rounded-lg border hover:bg-gray-100"
-                            disabled={!hasThread || isSending || isLocked}
-                        >
+                            className="px-3 py-3 rounded-lg border hover:bg-gray-100"
+                            disabled={!hasThread || isSending || isLocked}>
                             📎
                         </button>
                         <input
@@ -154,9 +141,9 @@ const MessageInput: React.FC<MessageInputProps> = ({
                             id="fileInput"
                             className="hidden"
                             onChange={async (e) => {
-                                const file = e.target.files?.[0];
-                                if (!file) return;
-                                await handleFileDrop(file);
+                                const file = e.target.files?.[0]
+                                if (!file) return
+                                await handleFileDrop(file)
                             }}
                             disabled={!hasThread}
                         />
@@ -166,34 +153,21 @@ const MessageInput: React.FC<MessageInputProps> = ({
                             value={userQuery}
                             onChange={(e) => setUserQuery(e.target.value)}
                             onKeyDown={(e) => {
-                                if (
-                                    e.key === 'Enter' &&
-                                    !e.shiftKey &&
-                                    !isSending &&
-                                    !isLocked &&
-                                    hasThread
-                                ) {
-                                    e.preventDefault();
-                                    handleSend();
+                                if (e.key === 'Enter' && !e.shiftKey && !isSending && !isLocked && hasThread) {
+                                    e.preventDefault()
+                                    handleSend()
                                 }
                             }}
-                            placeholder={
-                                hasThread
-                                    ? 'Posez une question…'
-                                    : 'Création de la conversation…'
-                            }
+                            placeholder={hasThread ? 'Posez une question…' : 'Création de la conversation…'}
                             className="min-w-0 flex-1 p-3 border rounded-lg"
                             disabled={!hasThread || isSending || isLocked}
                         />
 
                         {pendingFile && (
-                            <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border rounded-lg text-sm text-gray-700">
-                                📎 <span>{pendingFile.filename}</span>
-                                <button
-                                    type="button"
-                                    onClick={() => setPendingFile(null)}
-                                    className="text-red-500 hover:text-red-700 text-xs ml-2"
-                                >
+                            <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border rounded-lg text-sm text-gray-700">
+                                📎
+                                {!compact && <span className="truncate max-w-[200px]">{pendingFile.filename}</span>}
+                                <button type="button" onClick={() => setPendingFile(null)} className="text-red-500 hover:text-red-700 text-xs ml-2">
                                     ✕
                                 </button>
                             </div>
@@ -201,30 +175,18 @@ const MessageInput: React.FC<MessageInputProps> = ({
 
                         <button
                             onClick={handleSend}
-                            disabled={
-                                !hasThread ||
-                                isSending ||
-                                isLocked ||
-                                (userQuery.trim() === '' && !pendingFile)
-                            }
+                            disabled={!hasThread || isSending || isLocked || (userQuery.trim() === '' && !pendingFile)}
                             className={clsx(
                                 'px-4 py-2 rounded-lg text-white transition duration-200 ease-in-out',
-                                !hasThread || isSending || isLocked
-                                    ? 'bg-grey-800 cursor-not-allowed'
-                                    : 'bg-primary hover:bg-blue-600'
-                            )}
-                        >
-                            {!hasThread
-                                ? '…'
-                                : isSending || isLocked
-                                    ? 'Réponse…'
-                                    : 'Envoyer'}
+                                !hasThread || isSending || isLocked ? 'bg-grey-800 cursor-not-allowed' : 'bg-primary hover:bg-blue-600'
+                            )}>
+                            {!hasThread ? '…' : isSending || isLocked ? 'Réponse…' : 'Envoyer'}
                         </button>
                     </div>
                 </FileDropZone>
             </div>
         </div>
-    );
-};
+    )
+}
 
-export default MessageInput;
+export default MessageInput
