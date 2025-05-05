@@ -1,4 +1,4 @@
-import { useCallback,useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { createFileMessage } from '../services/file_message'
 import { ThreadService } from '../services/OpenAi/threadService'
@@ -63,7 +63,6 @@ export const useChatThread = (
         }
     }, [initialThreadId, thread, setMessages])
 
-    /* --- helpers thinking --- */
     const addThinking = useCallback(
         (threadId: string) =>
             setMessages(prev => [
@@ -89,7 +88,6 @@ export const useChatThread = (
         [setMessages]
     )
 
-    /* --- hook run --- */
     const { runWithFiles } = useAssistantRun(
         assistantId,
         () => addThinking(thread!.id),
@@ -97,7 +95,6 @@ export const useChatThread = (
         pushAssistantMessage
     )
 
-    /* --- suppression thread --- */
     const removeThread = useCallback(
         async (threadId: string) => {
             try {
@@ -110,7 +107,6 @@ export const useChatThread = (
         [tabId]
     )
 
-    /* --- envoi message --- */
     const sendMessage = useCallback(
         async (
             input: string | ThreadMessageContent[],
@@ -191,15 +187,38 @@ export const useChatThread = (
         ]
     )
 
-    /* --- édition message --- */
+// useChatThread.tsx
     const editMessage = useCallback(
         async (threadId: string, messageId: string, newContent: string) => {
+            /* 1️⃣ Supprimer TOUTES les réponses assistant qui suivent
+                  le message édité dans ce thread */
+            setMessages(prev => {
+                const index = prev.findIndex(m => m.id === messageId)
+                if (index === -1) return prev
+
+                return prev.filter(
+                    (m, i) =>
+                        !(
+                            i > index &&             // après le message édité
+                            m.sender === 'assistant' && // réponse assistant
+                            m.threadId === prev[index].threadId // même thread
+                        )
+                )
+            })
+
+            /* 2️⃣ Mettre à jour le message utilisateur (peut changer son ID) */
             await baseEditMessage(threadId, messageId, newContent)
+
+            /* 3️⃣ Relancer l’assistant */
             addThinking(threadId)
             const full = await stream(newContent, removeThinking)
             if (!thread?.id || !full.trim()) return
 
-            const aRes = await ThreadService.sendMessageToThread(thread.id, [{ type: 'text', text: full }], 'assistant')
+            const aRes = await ThreadService.sendMessageToThread(
+                thread.id,
+                [{ type: 'text', text: full }],
+                'assistant'
+            )
             pushAssistantMessage({
                 id: aRes.id,
                 sender: 'assistant',
@@ -208,7 +227,15 @@ export const useChatThread = (
                 threadId: thread.id
             })
         },
-        [thread, stream, baseEditMessage, addThinking, removeThinking, pushAssistantMessage]
+        [
+            thread,
+            stream,
+            baseEditMessage,
+            addThinking,
+            removeThinking,
+            pushAssistantMessage,
+            setMessages
+        ]
     )
 
     return {
