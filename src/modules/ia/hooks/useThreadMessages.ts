@@ -29,7 +29,6 @@ export const useThreadMessages = () => {
             })
         }
 
-
         const formatted = rawMessages.map((msg: any) => ({
             id: msg.id,
             content: msg.content?.[0]?.text?.value ?? '[Contenu vide]',
@@ -74,30 +73,32 @@ export const useThreadMessages = () => {
     }
 
     const editMessage = async (threadId: string, messageId: string, newContent: string) => {
-        const index = messages.findIndex((msg) => msg.id === messageId)
-        if (index === -1) return
+        // Optimistic update
+        setMessages(prev =>
+            prev.map(m =>
+                m.id === messageId
+                    ? { ...m, content: newContent, pending: true }
+                    : m
+            )
+        );
 
-        const toDelete = messages.slice(index).map((msg) => msg.id)
+        const res = await ThreadService.editMessage(threadId, messageId, newContent);
 
-        // Suppression locale
-        setMessages((prev) => prev.filter((m) => !toDelete.includes(m.id)))
-
-        // Appel backend
-        const res = await ThreadService.editMessage(threadId, messageId, newContent)
-
-        // Ajout nouveau message utilisateur (retourné par le backend)
-        setMessages((prev) => [
-            ...prev,
-            {
-                id: res.newMessage.id,
-                content: newContent,
-                sender: 'user',
-                timestamp: new Date(res.newMessage.created_at * 1000).toISOString(),
-                threadId,
-            },
-        ])
+        // Remplacement du message édité par celui retourné par l’API
+        setMessages(prev =>
+            prev.map(m =>
+                m.id === messageId
+                    ? {
+                        ...m,
+                        id: res.newMessage.id,
+                        content: newContent,
+                        timestamp: new Date(res.newMessage.created_at * 1000).toISOString(),
+                        pending: false,
+                    }
+                    : m
+            )
+        );
     }
-
 
     return { messages, setMessages, loadMessages, deleteMessage, editMessage }
 }

@@ -1,4 +1,4 @@
-import { useCallback,useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { createFileMessage } from '../services/file_message'
 import { ThreadService } from '../services/OpenAi/threadService'
@@ -25,7 +25,6 @@ export const useChatThread = (
     const { streamedResponse, stream } = useStreamAssistantResponse(workspaceSlug)
     const lastSeqRef = useRef(0)
 
-    /* --- chargement initial --- */
     useEffect(() => {
         if (!initialThreadId) return
 
@@ -63,7 +62,6 @@ export const useChatThread = (
         }
     }, [initialThreadId, thread, setMessages])
 
-    /* --- helpers thinking --- */
     const addThinking = useCallback(
         (threadId: string) =>
             setMessages(prev => [
@@ -89,7 +87,6 @@ export const useChatThread = (
         [setMessages]
     )
 
-    /* --- hook run --- */
     const { runWithFiles } = useAssistantRun(
         assistantId,
         () => addThinking(thread!.id),
@@ -97,7 +94,6 @@ export const useChatThread = (
         pushAssistantMessage
     )
 
-    /* --- suppression thread --- */
     const removeThread = useCallback(
         async (threadId: string) => {
             try {
@@ -110,7 +106,6 @@ export const useChatThread = (
         [tabId]
     )
 
-    /* --- envoi message --- */
     const sendMessage = useCallback(
         async (
             input: string | ThreadMessageContent[],
@@ -191,15 +186,42 @@ export const useChatThread = (
         ]
     )
 
-    /* --- édition message --- */
     const editMessage = useCallback(
         async (threadId: string, messageId: string, newContent: string) => {
+            console.log('🛠️ Début editMessage')
+            console.log('🧠 Recherche du message édité:', messageId)
+
+            const prevMessage = messages.find(m => m.id === messageId)
+            if (!prevMessage || !prevMessage.timestamp) {
+                console.warn('⚠️ Ancien message non trouvé ou sans timestamp:', messageId)
+                return
+            }
+
             await baseEditMessage(threadId, messageId, newContent)
+
+            setMessages(prev => {
+                const toRemove = prev.filter(m => {
+                    const isAssistant = m.sender === 'assistant'
+                    const sameThread = m.threadId === prevMessage.threadId
+                    const afterEdit = m.timestamp && new Date(m.timestamp) > new Date(prevMessage.timestamp!)
+                    return isAssistant && sameThread && afterEdit
+                })
+
+                console.log('🧹 Messages assistant supprimés:', toRemove.map(m => m.id))
+
+                return prev.filter(m => !toRemove.includes(m))
+            })
+
+
             addThinking(threadId)
             const full = await stream(newContent, removeThinking)
             if (!thread?.id || !full.trim()) return
 
-            const aRes = await ThreadService.sendMessageToThread(thread.id, [{ type: 'text', text: full }], 'assistant')
+            const aRes = await ThreadService.sendMessageToThread(
+                thread.id,
+                [{ type: 'text', text: full }],
+                'assistant'
+            )
             pushAssistantMessage({
                 id: aRes.id,
                 sender: 'assistant',
@@ -208,7 +230,7 @@ export const useChatThread = (
                 threadId: thread.id
             })
         },
-        [thread, stream, baseEditMessage, addThinking, removeThinking, pushAssistantMessage]
+        [thread, stream, baseEditMessage, addThinking, removeThinking, pushAssistantMessage, setMessages]
     )
 
     return {
