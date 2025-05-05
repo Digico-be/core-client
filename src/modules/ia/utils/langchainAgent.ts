@@ -5,8 +5,6 @@ import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { functionsDefinition } from '../functions/functionsDefinition'
 import { handleToolCall } from '../helpers/toolHandler'
 
-
-
 export const createLangChainAgent = async (workspace: string) => {
     const model = new ChatOpenAI({
         modelName: "gpt-4",
