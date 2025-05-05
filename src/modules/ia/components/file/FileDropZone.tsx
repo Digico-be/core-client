@@ -6,42 +6,45 @@ interface FileDropZoneProps {
     onFileDrop: (file: File) => void
     onDragStateChange?: (dragging: boolean) => void
     children: React.ReactNode
+    disabled?: boolean;
 }
 
 const FileDropZone: React.FC<FileDropZoneProps> = ({
+                                                       children,
                                                        onFileDrop,
                                                        onDragStateChange,
-                                                       children
+                                                       disabled = false,
                                                    }) => {
-    const handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault()
-        onDragStateChange?.(true)
-    }
+    const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+        if (disabled) return;
+
+        e.preventDefault();
+        const file = e.dataTransfer.files?.[0];
+        if (file) onFileDrop(file);
+        onDragStateChange?.(false);
+    };
+
+    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+        if (disabled) return;
+        e.preventDefault();
+        onDragStateChange?.(true);
+    };
 
     const handleDragLeave = () => {
-        onDragStateChange?.(false)
-    }
-
-    const handleDrop = (e: React.DragEvent) => {
-        e.preventDefault()
-        onDragStateChange?.(false)
-
-        const file = e.dataTransfer.files?.[0]
-        if (file) {
-            onFileDrop(file)
-        }
-    }
+        if (disabled) return;
+        onDragStateChange?.(false);
+    };
 
     return (
         <div
+            onDrop={handleDrop}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            className="w-full"
         >
             {children}
         </div>
-    )
-}
+    );
+};
+
 
 export default FileDropZone

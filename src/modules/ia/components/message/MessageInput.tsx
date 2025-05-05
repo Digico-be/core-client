@@ -99,6 +99,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
         }
     };
 
+    // @ts-ignore
     return (
         <div className="flex flex-col h-full w-full p-4 overflow-x-hidden">
             <div className="flex-1 overflow-y-auto min-h-0">
