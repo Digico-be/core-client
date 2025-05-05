@@ -18,7 +18,6 @@ interface MessageInputProps {
     assistantId: string;
     tabId: string;
 
-    /** ⬇️ données et actions injectées depuis AssistantBase */
     messages: Message[];
     streamedResponse: string;
     sendMessage: (
@@ -47,9 +46,14 @@ const MessageInput: React.FC<MessageInputProps> = ({
     const [isLocked, setIsLocked] = useState(false);
 
     const isSending = streamedResponse.length > 0;
+    const hasThread = !!thread?.id;
 
-    /** ─────── Handlers */
     const handleSend = async () => {
+        if (!hasThread) {
+            toast.error('La conversation n’est pas encore prête.');
+            return;
+        }
+
         const hasText = userQuery.trim() !== '';
         const hasFile = pendingFile !== null;
 
@@ -70,15 +74,20 @@ const MessageInput: React.FC<MessageInputProps> = ({
 
         const attachments = hasFile ? [pendingFile!] : undefined;
 
-        setIsLocked(true); // 🔒 verrouillage
+        setIsLocked(true);
         await sendMessage(content, attachments);
-        setIsLocked(false); // 🔓 déverrouillage
+        setIsLocked(false);
 
         setUserQuery('');
         setPendingFile(null);
     };
 
     const handleFileDrop = async (file: File) => {
+        if (!hasThread) {
+            toast.error('La conversation n’est pas encore prête.');
+            return;
+        }
+
         toast.info(`📥 Dépôt de fichier : ${file.name}`);
         const uploaded = await uploadFile(file);
 
@@ -90,10 +99,8 @@ const MessageInput: React.FC<MessageInputProps> = ({
         }
     };
 
-
     return (
         <div className="flex flex-col h-full w-full p-4 overflow-x-hidden">
-            {/* Zone messages scrollable */}
             <div className="flex-1 overflow-y-auto min-h-0">
                 <MessageList
                     messages={[
@@ -115,30 +122,29 @@ const MessageInput: React.FC<MessageInputProps> = ({
                     onEditMessage={async (id, txt) => {
                         if (thread?.id) {
                             await editMessage(thread.id, id, txt);
-                            // Ne pas renvoyer sendMessage ici pour éviter doublon
                         }
                     }}
                 />
             </div>
 
-            {/* Zone input */}
             <div className="mt-4">
                 <FileDropZone
                     onFileDrop={handleFileDrop}
                     onDragStateChange={(dragging) => setIsDragging(dragging)}
+                    disabled={!hasThread}
                 >
                     <div
                         className={clsx(
                             'flex gap-2 mt-4 items-center border p-2 rounded-lg transition-all duration-200',
                             isDragging && 'border-blue-500 bg-blue-50 shadow-md cursor-copy',
+                            !hasThread && 'opacity-50 cursor-not-allowed'
                         )}
                     >
-                        {/* bouton fichier */}
                         <button
                             type="button"
                             onClick={() => document.getElementById('fileInput')?.click()}
                             className="px-3 py-2 rounded-lg border hover:bg-gray-100"
-                            disabled={isSending || isLocked}
+                            disabled={!hasThread || isSending || isLocked}
                         >
                             📎
                         </button>
@@ -151,25 +157,34 @@ const MessageInput: React.FC<MessageInputProps> = ({
                                 if (!file) return;
                                 await handleFileDrop(file);
                             }}
+                            disabled={!hasThread}
                         />
 
-                        {/* input texte */}
                         <input
                             type="text"
                             value={userQuery}
                             onChange={(e) => setUserQuery(e.target.value)}
                             onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey && !isSending && !isLocked) {
+                                if (
+                                    e.key === 'Enter' &&
+                                    !e.shiftKey &&
+                                    !isSending &&
+                                    !isLocked &&
+                                    hasThread
+                                ) {
                                     e.preventDefault();
                                     handleSend();
                                 }
                             }}
-                            placeholder="Posez une question…"
+                            placeholder={
+                                hasThread
+                                    ? 'Posez une question…'
+                                    : 'Création de la conversation…'
+                            }
                             className="min-w-0 flex-1 p-3 border rounded-lg"
-                            disabled={isSending || isLocked}
+                            disabled={!hasThread || isSending || isLocked}
                         />
 
-                        {/* aperçu fichier */}
                         {pendingFile && (
                             <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border rounded-lg text-sm text-gray-700">
                                 📎 <span>{pendingFile.filename}</span>
@@ -183,17 +198,26 @@ const MessageInput: React.FC<MessageInputProps> = ({
                             </div>
                         )}
 
-                        {/* bouton envoyer */}
                         <button
                             onClick={handleSend}
-                            disabled={isSending || isLocked || (userQuery.trim() === '' && !pendingFile)}
-                            className={`px-4 py-2 rounded-lg text-white transition duration-200 ease-in-out ${
-                                isSending || isLocked
+                            disabled={
+                                !hasThread ||
+                                isSending ||
+                                isLocked ||
+                                (userQuery.trim() === '' && !pendingFile)
+                            }
+                            className={clsx(
+                                'px-4 py-2 rounded-lg text-white transition duration-200 ease-in-out',
+                                !hasThread || isSending || isLocked
                                     ? 'bg-grey-800 cursor-not-allowed'
                                     : 'bg-primary hover:bg-blue-600'
-                            }`}
+                            )}
                         >
-                            {isSending || isLocked ? 'Réponse…' : 'Envoyer'}
+                            {!hasThread
+                                ? '…'
+                                : isSending || isLocked
+                                    ? 'Réponse…'
+                                    : 'Envoyer'}
                         </button>
                     </div>
                 </FileDropZone>
