@@ -1,13 +1,21 @@
 'use client'
 
+import { PageHeader } from '@digico/ui'
+import { getTenantUrl } from '@digico/utils'
 
 import { UpdateAssistantForm } from '../../../../../modules/ia/components/setting/UpdateAssistantForm'
 
 export default function EditAssistantPage() {
     return (
         <div className="max-w-4xl mx-auto pt-8">
-            <h1 className="text-2xl font-bold mb-4">Modifier l’assistant IA</h1>
+            <PageHeader
+                label="Retour aux assistants"
+                href={getTenantUrl('/ia')}
+            >
+                Modifier l’assistant IA
+            </PageHeader>
+
             <UpdateAssistantForm />
         </div>
-    )
+    );
 }

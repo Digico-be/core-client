@@ -10,4 +10,5 @@ export type IconName =
 	| "search"
 	| "settings"
 	| "sort"
+	| "tooth"
 	| "upload";
