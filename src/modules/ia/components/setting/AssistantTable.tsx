@@ -24,7 +24,6 @@ export const AssistantTable = ({ items }: Props) => {
         module: a.module || '–',
     }))
 
-    console.log("formattedItems", formattedItems)
     return (
         <Table onClick={toSettings} items={formattedItems}>
             <Table.Head>OpenAI ID</Table.Head>

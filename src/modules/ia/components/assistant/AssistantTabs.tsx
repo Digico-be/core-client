@@ -1,7 +1,6 @@
 'use client'
 
 import React, {useEffect, useRef, useState} from 'react'
-import { Button } from '@digico/ui'
 import { useRouterWithTenant } from '@digico/utils'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -245,16 +244,17 @@ const AssistantTabs: React.FC<AssistantTabsProps> = ({ type }) => {
                 )}
 
                 {/* Ajout de tab */}
-                <div className="ml-4">
+                <div className="ml-4 flex gap-2">
                     <button
                         onClick={addTab}
-                        className="bg-primary text-white px-4 py-2 rounded"
+                        className="bg-primary text-white px-4 py-2 rounded text-sm"
                     >
                         Créer un assistant
                     </button>
-                    <Button onClick={() => router.push('/ia/setting')}>
+                    <button onClick={() => router.push('/ia/setting')} className="bg-primary text-white px-4 py-2 rounded text-sm"
+                    >
                         Voir les réglages
-                    </Button>
+                    </button>
 
 
                 </div>

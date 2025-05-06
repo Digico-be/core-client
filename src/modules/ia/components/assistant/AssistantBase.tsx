@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { Button } from '@digico/ui'
-import { useAuth } from '@digico/utils';
+import { useAuth, useRouterWithTenant } from '@digico/utils'
 
 import { useAssistant } from '../../hooks/useAssistant';
 import { useChatThread } from '../../hooks/useChatThread';
 import { useThreadTabsContext } from '../../hooks/useThreadTabsContext';
 
+import { Assistant } from '../../models/assistant'
 import { Message } from '../../models/message';
 import { Thread } from '../../models/thread';
 import MessageInput from '../message/MessageInput';
@@ -22,6 +22,7 @@ const AssistantBase: React.FC<Props> = ({ module, tabId, type }) => {
     const { data: assistant, isLoading, isError, error } = useAssistant(module, tabId, type);
     const { activeThreadId, threads, addThread, isLoading: threadsLoading } = useThreadTabsContext();
     const { tenant } = useAuth();
+    const router = useRouterWithTenant()
 
     const {
         messages,
@@ -56,15 +57,18 @@ const AssistantBase: React.FC<Props> = ({ module, tabId, type }) => {
     if (!activeThreadId || !thread)
         return <p className="p-4 text-center">Chargement du thread…</p>;
 
+    const toSettings = (assistant: Assistant) => {
+        router.push(`/ia/setting/${assistant.openai_id}`)
+    }
     return (
         <div className="bg-white pt-4 flex flex-col flex-1 overflow-hidden">
             <h1 className="text-2xl font-bold text-center mb-4">{assistant.name}</h1>
             <p className="text-center mb-6 text-grey">{assistant.description}</p>
 
             <div className="flex justify-center mt-2 mb-6">
-                <Button size="sm" href={`/ia/setting/${assistant.openai_id}`}>
+                <button onClick={() => toSettings(assistant)}>
                     Réglages
-                </Button>
+                </button>
             </div>
 
             <div className="text-xs text-center mb-6">
