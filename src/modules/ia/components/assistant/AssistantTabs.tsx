@@ -1,6 +1,8 @@
 'use client'
 
 import React, {useEffect, useRef, useState} from 'react'
+import { Button } from '@digico/ui'
+import { useRouterWithTenant } from '@digico/utils'
 import { v4 as uuidv4 } from 'uuid'
 
 import { destroyAssistant } from '../../services/assistant'
@@ -27,6 +29,7 @@ const AssistantTabs: React.FC<AssistantTabsProps> = ({ type }) => {
     const scrollInterval = useRef<NodeJS.Timeout | null>(null)
     const prevActiveTabId = useRef<string | null>(null)
     const centerTimeout = useRef<NodeJS.Timeout | null>(null)
+    const router = useRouterWithTenant()
 
     const startContinuousScroll = (direction: 'left' | 'right') => {
         const el = containerRef.current
@@ -249,6 +252,11 @@ const AssistantTabs: React.FC<AssistantTabsProps> = ({ type }) => {
                     >
                         Créer un assistant
                     </button>
+                    <Button onClick={() => router.push('/ia/setting')}>
+                        Voir les réglages
+                    </Button>
+
+
                 </div>
             </div>
 

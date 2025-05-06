@@ -16,13 +16,13 @@ interface Props {
     type: 'general' | 'specialized';
 }
 
-const AssistantTabContent: React.FC<Props> = ({ tabId, module }) => {
+const AssistantTabContent: React.FC<Props> = ({ tabId, module, type }) => {
     const {
         data: assistant,
         isLoading: assistantLoading,
         isError,
         error,
-    } = useAssistant(module, tabId);
+    } = useAssistant(module, tabId, type);
 
     const threadTabs = useThreadTabs(tabId, assistant?.openai_id, module);
     const { threads, addThread, isLoading: threadsLoading, hasFetchedFromDB } = threadTabs;
@@ -69,7 +69,7 @@ const AssistantTabContent: React.FC<Props> = ({ tabId, module }) => {
                 </div>
 
                 <div className="flex flex-col flex-1 overflow-hidden">
-                    <AssistantBase module={module} tabId={tabId} />
+                    <AssistantBase module={module} tabId={tabId} type={type}/>
                 </div>
             </div>
         </ThreadTabsProvider>

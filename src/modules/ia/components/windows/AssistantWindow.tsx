@@ -18,7 +18,7 @@ const AssistantWindow: React.FC = () => {
     const excludedPaths = ['/codevo', '/codevo/ia'];
 
     // 👉 On récupère l’assistant ICI
-    const { data: assistant } = useAssistant(moduleType, tabId);
+    const { data: assistant } = useAssistant(moduleType, tabId, 'general');
 
     if (excludedPaths.includes(pathname)) return null;
 
@@ -38,7 +38,7 @@ const AssistantWindow: React.FC = () => {
                         module={moduleType}
                         assistantId={assistant.openai_id}
                     >
-                        <AssistantBase tabId={tabId} module={moduleType} />
+                        <AssistantBase tabId={tabId} module={moduleType} type={'specialized'}/>
                     </ThreadTabsProvider>
                 </div>
             )}

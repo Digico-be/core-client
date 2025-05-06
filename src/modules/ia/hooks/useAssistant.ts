@@ -17,7 +17,7 @@ type OpenAiAssistant = {
     tools?: any[]
 }
 
-export const useAssistant = (module: string, tabId: string) => {
+export const useAssistant = (module: string, tabId: string, type: string) => {
     const queryClient = useQueryClient()
     const [assistantOpenAiId, setAssistantOpenAiId] = useState(() =>
         SessionStorage.getAssistantOpenAiIdForTab(tabId)
@@ -56,7 +56,8 @@ export const useAssistant = (module: string, tabId: string) => {
                 module,
                 model: newOA.model,
                 instructions: newOA.instructions,
-                tools: newOA.tools
+                tools: newOA.tools,
+                type: type as "specialized" | "general"
             })
 
             SessionStorage.setAssistantOpenAiIdForTab(tabId, saved.openai_id)

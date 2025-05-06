@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
+import { Button } from '@digico/ui'
 import { useAuth } from '@digico/utils';
 
 import { useAssistant } from '../../hooks/useAssistant';
@@ -14,10 +15,11 @@ import MessageInput from '../message/MessageInput';
 interface Props {
     module: string;
     tabId: string;
+    type: string;
 }
 
-const AssistantBase: React.FC<Props> = ({ module, tabId }) => {
-    const { data: assistant, isLoading, isError, error } = useAssistant(module, tabId);
+const AssistantBase: React.FC<Props> = ({ module, tabId, type }) => {
+    const { data: assistant, isLoading, isError, error } = useAssistant(module, tabId, type);
     const { activeThreadId, threads, addThread, isLoading: threadsLoading } = useThreadTabsContext();
     const { tenant } = useAuth();
 
@@ -58,6 +60,12 @@ const AssistantBase: React.FC<Props> = ({ module, tabId }) => {
         <div className="bg-white pt-4 flex flex-col flex-1 overflow-hidden">
             <h1 className="text-2xl font-bold text-center mb-4">{assistant.name}</h1>
             <p className="text-center mb-6 text-grey">{assistant.description}</p>
+
+            <div className="flex justify-center mt-2 mb-6">
+                <Button size="sm" href={`/ia/setting/${assistant.openai_id}`}>
+                    Réglages
+                </Button>
+            </div>
 
             <div className="text-xs text-center mb-6">
                 AssistantId:&nbsp;{assistant.openai_id}
