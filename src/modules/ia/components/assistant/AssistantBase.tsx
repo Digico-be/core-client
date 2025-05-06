@@ -70,14 +70,11 @@ const AssistantBase: React.FC<Props> = ({ module, tabId, type }) => {
     // 4) Enfin, l'affichage principal
     return (
         <div className="bg-white pt-4 flex flex-col flex-1 overflow-hidden">
-            <h1 className="text-2xl font-bold text-center mb-4">
-                {assistant.name}
-            </h1>
-            <p className="text-center mb-6 text-grey">
-                {assistant.description}
-            </p>
 
-            <div className="flex justify-center mt-2 mb-6">
+            <div className="flex items-center justify-between px-4 mb-2">
+                <h1 className="text-2xl font-bold text-center mb-4">
+                    {assistant.name}
+                </h1>
                 <button
                     type="button"
                     onClick={toSettings}
