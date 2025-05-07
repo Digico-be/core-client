@@ -7,7 +7,7 @@ import { UpdateAssistantForm } from '../../../../../modules/ia/components/settin
 
 export default function EditAssistantPage() {
     return (
-        <div className="max-w-4xl mx-auto pt-8">
+        <div className="max-w-8xl mx-auto pt-8 px-4">
             <PageHeader
                 label="Retour aux assistants"
                 href={getTenantUrl('/ia')}

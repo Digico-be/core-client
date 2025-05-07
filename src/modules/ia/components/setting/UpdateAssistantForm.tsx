@@ -1,3 +1,5 @@
+'use client'
+
 import { useParams } from 'next/navigation'
 
 import { useEffect } from 'react'
@@ -13,50 +15,57 @@ import { Assistant } from '../../models/assistant'
 
 import { AssistantFields } from './form/AssistantFields'
 
+// ✅ Type adapté à la structure du formulaire (array d’objets pour rules/prompts)
+interface AssistantFormValues extends Omit<Assistant, 'rules' | 'suggested_prompts'> {
+    rules: { value: string }[]
+    suggested_prompts: { value: string }[]
+}
+
+// ✅ Fonction utilitaire pour parser les règles/prompts
+function parseIfNeeded(input: unknown): { value: string }[] {
+    try {
+        const array = typeof input === 'string' ? JSON.parse(input) : input
+        if (Array.isArray(array)) {
+            return array.map((r: any) => ({ value: String(r) }))
+        }
+        return []
+    } catch {
+        return []
+    }
+}
+
 export const UpdateAssistantForm = () => {
     const { id } = useParams()
     const router = useRouterWithTenant()
-    // on récupère la réponse et le flag isLoading
     const { data: response, isLoading, isError } = useReadAssistant(id as string)
     const updateAssistant = useUpdateAssistant()
 
-    // 1) hook useForm toujours appelé
-    const form = useForm<Assistant>()
+    const form = useForm<AssistantFormValues>()
 
-    // 2) dès que la réponse arrive, on reset le form
     useEffect(() => {
         if (response) {
-            // si votre API renvoie `{ data: Assistant }`
             const assistant = (response as any).data ?? response
-            form.reset(assistant)
+
+            form.reset({
+                ...assistant,
+                rules: parseIfNeeded(assistant.rules),
+                suggested_prompts: parseIfNeeded(assistant.suggested_prompts),
+            })
         }
     }, [response, form])
 
-    // 3) pendant le chargement…
-    if (isLoading) {
-        return <Box>Chargement…</Box>
-    }
+    if (isLoading) return <Box>Chargement…</Box>
+    if (isError || !response) return <Box>Erreur de chargement.</Box>
 
-    // 4) gestion d’erreur éventuelle
-    if (isError || !response) {
-        return <Box>Erreur de chargement.</Box>
-    }
-
-    // 5) au bout du compte, on affiche le form prérempli
-    const handleSubmit = (values: Assistant) => {
-        try {
-            values.rules = JSON.parse(values.rules as any)
-        } catch {
-            values.rules = []
-        }
-        try {
-            values.suggested_prompts = JSON.parse(values.suggested_prompts as any)
-        } catch {
-            values.suggested_prompts = []
+    const handleSubmit = (values: AssistantFormValues) => {
+        const formattedValues: Assistant = {
+            ...values,
+            rules: values.rules.map((r) => r.value).filter(Boolean),
+            suggested_prompts: values.suggested_prompts.map((p) => p.value).filter(Boolean),
         }
 
         updateAssistant.mutate(
-            { ...values, openai_id: id as string },
+            { ...formattedValues, openai_id: id as string },
             {
                 onSuccess: () => {
                     toast.success('Assistant mis à jour avec succès !')
