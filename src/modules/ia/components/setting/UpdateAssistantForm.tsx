@@ -11,6 +11,7 @@ import { toast } from 'sonner'
 import { useReadAssistant } from '../../hooks/useReadAssistant'
 import { useUpdateAssistant } from '../../hooks/useUpdateAssistant'
 
+import { functionsDefinition } from '../../functions/functionsDefinition'
 import { Assistant } from '../../models/assistant'
 
 import { AssistantFields } from './form/AssistantFields'
@@ -63,6 +64,7 @@ export const UpdateAssistantForm = () => {
             ...values,
             rules: values.rules.map((r) => r.value).filter(Boolean),
             suggested_prompts: values.suggested_prompts.map((p) => p.value).filter(Boolean),
+            tools: [{ type: 'file_search' }, ...functionsDefinition], // ← Optionnel ici
         }
 
         updateAssistant.mutate(

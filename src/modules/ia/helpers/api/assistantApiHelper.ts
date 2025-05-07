@@ -1,3 +1,5 @@
+import { Assistant } from '../../models/assistant'
+
 /**
  * Crée un assistant via l'API OpenAI.
  * @param assistant L'assistant à créer
@@ -89,3 +91,23 @@ export const deleteAssistant = async (assistantId: string) => {
         throw new Error('Erreur lors de la suppression de l\'assistant');
     }
 };
+
+export const patchAssistantOpenAI = async (
+    assistantId: string,
+    payload: Partial<Assistant>
+) => {
+    try {
+        const res = await fetch(`/api/assistants/${assistantId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        })
+
+        if (!res.ok) throw new Error('Erreur update OpenAI')
+
+        return await res.json()
+    } catch (e) {
+        console.error('[patchAssistantOpenAI]', e)
+        throw e
+    }
+}

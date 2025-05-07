@@ -30,8 +30,6 @@ const AssistantTabContent: React.FC<Props> = ({ tabId, module, type }) => {
     const [threadReady, setThreadReady] = useState(false);
 
     useEffect(() => {
-        console.debug('[useThreadTabs] threads.length:', threads.length);
-
         // On attend assistant + hasFetchedFromDB + threads non null
         if (!assistant || threadsLoading || !hasFetchedFromDB) return;
 

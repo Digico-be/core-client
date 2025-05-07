@@ -41,3 +41,29 @@ export async function GET(req: NextRequest, context: any) {
         return NextResponse.json({ error: 'Assistant non trouvé' }, { status: 404 });
     }
 }
+
+// PATCH
+export async function PATCH(req: NextRequest, { params }: { params: { assistantId: string } }) {
+    const { assistantId } = params;
+    const raw = await req.json();
+
+    // ✅ 1. Retirer les champs indésirables OU null/undefined
+    const allowed = ['name','description','instructions','model','tools','file_ids','metadata'] as const;
+    const payload: Record<string, unknown> = Object.fromEntries(
+        allowed
+            .filter(k => raw[k] !== undefined && raw[k] !== null)   // ⬅️ retire null
+            .map(k => [k, raw[k]])
+    );
+
+    try {
+        const updated = await openai.beta.assistants.update(assistantId, payload);
+        return NextResponse.json(updated);
+    } catch (err: any) {
+        console.error('[PATCH assistant]', err);
+        return NextResponse.json({ error: err?.error?.message ?? 'Update failed' },
+            { status: err?.status ?? 500 });
+    }
+}
+
+
+
