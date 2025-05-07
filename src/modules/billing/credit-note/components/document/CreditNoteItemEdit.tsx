@@ -8,9 +8,8 @@ import { toast } from 'sonner'
 import { useDestroyCreditNoteItem, useUpdateCreditNoteItem } from '@billing/credit-note/hooks/mutations'
 import { BillingItemType } from '@billing/billing-item/types/BillingItem'
 
+import { Modal } from '@components/dashboard/Modal'
 import { Icon } from 'components/Icon'
-
-import { Modal } from '../Modal'
 
 type Props = {
     item: BillingItemType & {

@@ -3,7 +3,7 @@ const SESSION_KEYS = {
     THREADS: 'threads_by_tab',
     ASSISTANT_TABS: 'assistant_tabs',
     ACTIVE_TAB_ID: 'active_tab_id',
-    FORCE_NEW_ASSISTANT: 'force_new_assistant',   // ⬅️  nouvel identifiant
+    FORCE_NEW_ASSISTANT: 'force_new_assistant',
 
 };
 

@@ -5,8 +5,15 @@ import { readAssistants } from '../services/assistant'
 import { AssistantTab } from '../models/assistantTab'
 
 export const useAssistantTabs = (type: 'general' | 'specialized') => {
-    const [tabs, setTabs] = useState<AssistantTab[]>([])
-    const [activeTabId, setActiveTabId] = useState<string | null>(null)
+    const [tabs, setTabs] = useState<AssistantTab[]>(() => {
+        const stored = sessionStorage.getItem(`assistant_tabs_${type}`)
+        return stored ? JSON.parse(stored) : []
+    })
+
+    const [activeTabId, setActiveTabId] = useState<string | null>(() => {
+        return sessionStorage.getItem(`active_assistant_tab_${type}`) || null
+    })
+
 
     useEffect(() => {
         const storedTabs = sessionStorage.getItem(`assistant_tabs_${type}`)

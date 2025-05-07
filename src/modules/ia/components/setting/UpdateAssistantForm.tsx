@@ -16,13 +16,11 @@ import { Assistant } from '../../models/assistant'
 
 import { AssistantFields } from './form/AssistantFields'
 
-// ✅ Type adapté à la structure du formulaire (array d’objets pour rules/prompts)
 interface AssistantFormValues extends Omit<Assistant, 'rules' | 'suggested_prompts'> {
     rules: { value: string }[]
     suggested_prompts: { value: string }[]
 }
 
-// ✅ Fonction utilitaire pour parser les règles/prompts
 function parseIfNeeded(input: unknown): { value: string }[] {
     try {
         const array = typeof input === 'string' ? JSON.parse(input) : input
@@ -72,6 +70,7 @@ export const UpdateAssistantForm = () => {
             {
                 onSuccess: () => {
                     toast.success('Assistant mis à jour avec succès !')
+
                     router.push('/ia')
                 },
                 onError: () => {
