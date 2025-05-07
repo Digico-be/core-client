@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useFieldArray, useFormContext } from 'react-hook-form'
 import { AiOutlineInfoCircle } from 'react-icons/ai'
 import { Tooltip } from 'react-tooltip'
@@ -14,16 +14,17 @@ import 'react-tooltip/dist/react-tooltip.css'
 /* Tooltip réutilisable */
 const InfoTooltip = ({ id, content }: { id: string; content: string }) => (
     <>
-    <span
-        data-tooltip-id={id}
-        data-tooltip-content={content}
-        className="inline-block ml-1 cursor-pointer"
-    >
-      <AiOutlineInfoCircle className="w-4 h-4 text-gray-500" />
-    </span>
+        <span
+            data-tooltip-id={id}
+            data-tooltip-html={content.replace(/\n/g, '<br />')}
+            className="inline-block ml-1 cursor-pointer"
+        >
+            <AiOutlineInfoCircle className="w-4 h-4 text-gray-500" />
+        </span>
         <Tooltip id={id} place="top" />
     </>
 )
+
 
 /* Types du formulaire */
 interface AssistantFormValues {
@@ -63,6 +64,22 @@ export const AssistantFields = () => {
         { value: 'contact', label: 'Support client' },
         { value: 'team', label: 'Gestion d’équipe' },
     ]
+
+    // Définition des options de modèles
+    const modelOptions = [
+        { value: 'gpt-4o-2025-04-14', label: 'GPT-4o' },
+        { value: 'gpt-4.1-2025-04-14', label: 'GPT-4.1' },
+        { value: 'gpt-4.5-2025-02-27', label: 'GPT-4.5' },
+        { value: 'gpt-4-2023-03-14', label: 'GPT-4' },
+        { value: 'gpt-3.5-turbo-2023-11-06', label: 'GPT-3.5 Turbo' },
+    ];
+
+    useEffect(() => {
+        const currentValue = form.getValues('max_tokens_output')
+        if (!currentValue || currentValue <= 0) {
+            form.setValue('max_tokens_output', 400)
+        }
+    }, [])
 
     return (
         <>
@@ -120,26 +137,68 @@ export const AssistantFields = () => {
                 </Form.Group>
 
             {/* Paramètres techniques */}
-                <Form.Group>
-                    <Form.Row>
-                        <Form.Field
+            <Form.Group>
+                <Form.Row>
+                    <div className="w-full flex flex-col gap-2">
+                        <label htmlFor="model" className="text-sm font-semibold text-gray-700">
+                            Modèle OpenAI
+                            <InfoTooltip
+                                id="tooltip-model"
+                                content="Choisissez le modèle utilisé pour générer les réponses."
+                            />
+                        </label>
+                        <Form.Select
                             name="model"
-                            label="Modèle OpenAI"
-                            placeholder="gpt-4o-2025-04-14"
+                            options={modelOptions}
                         />
+                    </div>
+
+                    <div className="w-full flex flex-col gap-2">
+                        <label htmlFor="temperature" className="text-sm font-semibold text-gray-700">
+                            Créativité
+                            <InfoTooltip
+                                id="tooltip-temperature"
+                                content={`Valeur entre 0 et 2.\nUne température élevée (ex. 0.8) rend les réponses plus créatives et variées.\nUne température basse (ex. 0.2) les rend plus précises et déterministes.`}
+                            />
+
+                        </label>
                         <Form.Field
                             name="temperature"
-                            label="Créativité"
                             type="number"
                             step="0.1"
+                            min={0}
+                            max={2}
+                            placeholder="1"
                         />
+
+                    </div>
+
+
+                    <div className="w-full flex flex-col gap-2">
+                        <label htmlFor="max_tokens_output" className="text-sm font-semibold text-gray-700">
+                            Longueur max. réponse
+                            <InfoTooltip
+                                id="tooltip-max-tokens"
+                                content="Un token ≈ 4 caractères en anglais (ou ≈ ¾ mot). Exemple : 400 tokens ≈ 300 mots ou 1600 caractères."
+                            />
+                        </label>
                         <Form.Field
                             name="max_tokens_output"
-                            label="Longueur max. réponse"
                             type="number"
+                            placeholder="400"
+                            onBlur={(e) => {
+                                const value = Number(e.target.value)
+                                if (isNaN(value) || value <= 0) {
+                                    form.setValue('max_tokens_output', 400)
+                                }
+                            }}
                         />
-                    </Form.Row>
-                </Form.Group>
+
+                    </div>
+                </Form.Row>
+            </Form.Group>
+
+
 
             {/* Persona */}
                 <Form.Group>
