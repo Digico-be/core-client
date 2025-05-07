@@ -166,17 +166,28 @@ export const AssistantFields = () => {
 
             {/* Règles dynamiques */}
             <Form.Group title="Règles">
+                {/* Label placé hors de la grille */}
+                <label
+                    htmlFor="rule-0"
+                    className="block mb-2 text-sm font-semibold text-gray-700"
+                >
+                    Règles à respecter
+                </label>
+
+                {/* Liste des règles */}
                 {ruleFields.map((field, index) => (
                     <Form.Row
                         key={field.id}
-                        className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-center"
+                        className="grid grid-cols-[1fr_auto] gap-4 items-center"
                     >
                         <Form.Field
+                            /* on supprime la prop `label` */
+                            id={`rule-${index}`}
                             name={`rules.${index}.value`}
                             type="text"
-                            label={index === 0 ? 'Règles à respecter' : undefined}
                             placeholder="Ex. Ne jamais inventer"
                         />
+
                         <button
                             type="button"
                             onClick={() => removeRule(index)}
@@ -187,55 +198,68 @@ export const AssistantFields = () => {
                         </button>
                     </Form.Row>
                 ))}
-                <Form.Row>
+
+                {/* Bouton d’ajout */}
+                <Form.Row className="flex justify-start">   {/* ↞ range la cellule au début */}
                     <button
                         type="button"
                         onClick={() => appendRule({ value: '' })}
-                        className="inline-flex items-center text-blue-600 font-medium hover:underline gap-1"
+                        className="w-2/5 bg-primary text-white px-4 py-2 rounded text-sm text-center"
                     >
-                        <Icon name="add" className="w-10 h-10" />
+                        Ajouter une règle
+                    </button>
+                </Form.Row>
+
+            </Form.Group>
+
+
+            {/* Prompts suggérés dynamiques */}
+            {/* Prompts suggérés dynamiques */}
+            <Form.Group title="Prompts suggérés">
+                {/* Label placé hors de la grille */}
+                <label
+                    htmlFor="prompt-0"
+                    className="block mb-2 text-sm font-semibold text-gray-700"
+                >
+                    Suggestions pour démarrer
+                </label>
+
+                {/* Liste des prompts */}
+                {promptFields.map((field, index) => (
+                    <Form.Row
+                        key={field.id}
+                        className="grid grid-cols-[1fr_auto] gap-4 items-center"
+                    >
+                        <Form.Field
+                            id={`prompt-${index}`}
+                            name={`suggested_prompts.${index}.value`}
+                            type="text"
+                            placeholder="Ex. Comment puis-je t’aider?"
+                        />
+
+                        <button
+                            type="button"
+                            onClick={() => removePrompt(index)}
+                            className="text-gray-500 hover:text-red-600 transition-colors"
+                            title="Supprimer la suggestion"
+                        >
+                            <Icon name="trash" className="w-10 h-10" />
+                        </button>
+                    </Form.Row>
+                ))}
+
+                {/* Bouton d’ajout */}
+                <Form.Row className="flex justify-start">
+                    <button
+                        type="button"
+                        onClick={() => appendPrompt({ value: '' })}
+                        className="w-2/5 bg-primary text-white px-4 py-2 rounded text-sm text-center"
+                    >
+                        Ajouter une suggestion
                     </button>
                 </Form.Row>
             </Form.Group>
 
-            {/* Prompts suggérés dynamiques */}
-            <Form.Group title="Prompts suggérés">
-                {promptFields.map((field, index) => (
-                    <Form.Row
-                        key={field.id}
-                        className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-center"
-                    >
-                        <div className="flex items-center">
-                            <Form.Field
-                                name={`suggested_prompts.${index}.value`}
-                                type="text"
-                                label={index === 0 ? 'Suggestions pour démarrer' : undefined}
-                                placeholder="Ex. Comment puis-je t’aider ?"
-                                className="w-full"
-                            />
-                        </div>
-                        <div className="flex items-center justify-center h-full">
-                            <button
-                                type="button"
-                                onClick={() => removePrompt(index)}
-                                className="text-gray-500 hover:text-red-600 transition-colors"
-                                title="Supprimer la suggestion"
-                            >
-                                <Icon name="trash" className="w-6 h-6" />
-                            </button>
-                        </div>
-                    </Form.Row>
-                ))}
-                <Form.Row>
-                    <button
-                        type="button"
-                        onClick={() => appendPrompt({ value: '' })}
-                        className="inline-flex items-center text-blue-600 font-medium hover:underline gap-1"
-                    >
-                        <Icon name="add" className="w-6 h-6" />
-                    </button>
-                </Form.Row>
-            </Form.Group>
 
 
         </>
