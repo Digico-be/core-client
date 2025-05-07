@@ -48,6 +48,7 @@ export const UpdateAssistantForm = () => {
 
             form.reset({
                 ...assistant,
+                module: assistant.module || '',
                 rules: parseIfNeeded(assistant.rules),
                 suggested_prompts: parseIfNeeded(assistant.suggested_prompts),
             })
