@@ -12,6 +12,7 @@ import { AssistantTab } from '../../models/assistantTab'
 import { SessionStorage } from '../../utils/sessions'
 
 import AssistantTabContent from './AssistantTabContent'
+import CreateAssistantModal from './CreateAssistantModal'
 
 
 
@@ -245,12 +246,23 @@ const AssistantTabs: React.FC<AssistantTabsProps> = ({ type }) => {
 
                 {/* Ajout de tab */}
                 <div className="ml-4 flex gap-2">
-                    <button
-                        onClick={addTab}
-                        className="bg-primary text-white px-4 py-2 rounded text-sm"
-                    >
-                        Créer un assistant
-                    </button>
+                    <CreateAssistantModal onCreate={(type, module) => {
+                        const id = uuidv4()
+                        const title = type === 'general'
+                            ? `Assistant Général ${tabs.filter(t => t.type === 'general').length + 1}`
+                            : `Module: ${module}`
+
+                        const newTab: AssistantTab = {
+                            id,
+                            module: type === 'general' ? 'general' : module || '',
+                            title,
+                            type,
+                        }
+
+                        setTabs(prev => [...prev, newTab])
+                        setActiveTabId(id)
+                    }} />
+
                     <button onClick={() => router.push('/ia/setting')} className="bg-primary text-white px-4 py-2 rounded text-sm"
                     >
                         Voir les réglages
