@@ -28,24 +28,20 @@ export const useAssistant = (module: string, tabId: string, type: string) => {
         enabled: !!module && !!tabId,
         staleTime: 5 * 60 * 1000,
         queryFn: async (): Promise<Assistant> => {
+            const forceNew = SessionStorage.isForceNewAssistant(tabId)
+
             const all = await readAssistants({ module })
             const assistants: Assistant[] = Array.isArray(all) ? all : all?.data ?? []
 
-            // ─── 1. Rechercher s'il existe un assistant pour ce module ───
-            if (assistants.length > 0) {
-                const mapped = SessionStorage.getAssistantOpenAiIdForTab(tabId)
-                const existing = mapped
-                    ? assistants.find(a => a.openai_id === mapped)
-                    : assistants[0]
-
-                if (existing) {
-                    SessionStorage.setAssistantOpenAiIdForTab(tabId, existing.openai_id)
-                    setAssistantOpenAiId(existing.openai_id)
-                    return existing
-                }
+            // ─── 1. Réutiliser l’assistant existant si possible ───
+            if (!forceNew && assistants.length > 0) {
+                const existing = assistants[0]
+                SessionStorage.setAssistantOpenAiIdForTab(tabId, existing.openai_id)
+                setAssistantOpenAiId(existing.openai_id)
+                return existing
             }
 
-            // ─── 2. S'il n'y a aucun assistant existant pour ce module, on le crée ───
+            // ─── 2. Sinon, créer un nouvel assistant ───
             const assistantName = module
             const newOA = (await AssistantService.createAssistant(assistantName)) as OpenAiAssistant
 
@@ -57,16 +53,19 @@ export const useAssistant = (module: string, tabId: string, type: string) => {
                 model: newOA.model,
                 instructions: newOA.instructions,
                 tools: newOA.tools,
-                type: type as "specialized" | "general"
+                type: type as 'specialized' | 'general',
             })
 
             SessionStorage.setAssistantOpenAiIdForTab(tabId, saved.openai_id)
             SessionStorage.setAssistantCreatedForTab(tabId)
+
+            if (forceNew) {
+                SessionStorage.clearForceNewAssistant(tabId)
+            }
+
             setAssistantOpenAiId(saved.openai_id)
-
             return saved
-        }
-
+        },
     })
 
     const deleteMutation = useMutation({
@@ -92,13 +91,13 @@ export const useAssistant = (module: string, tabId: string, type: string) => {
         },
         onError: (error) => {
             console.error("Erreur lors de la suppression de l'assistant:", error)
-        }
+        },
     })
 
     return {
         ...query,
         deleteAssistant: deleteMutation.mutateAsync,
         isDeleting: deleteMutation.isPending,
-        deletionError: deleteMutation.error
+        deletionError: deleteMutation.error,
     }
 }

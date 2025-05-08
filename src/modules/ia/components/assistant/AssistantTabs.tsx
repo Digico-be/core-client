@@ -13,6 +13,7 @@ import { SessionStorage } from '../../utils/sessions'
 
 import AssistantTabContent from './AssistantTabContent'
 import CreateAssistantModal from './CreateAssistantModal'
+import { toast } from 'sonner'
 
 
 
@@ -79,18 +80,24 @@ const AssistantTabs: React.FC<AssistantTabsProps> = ({ type }) => {
     }, [tabs, activeTabId])
 
     const addTab = () => {
-        const moduleName =
-            type === 'general'
-                ? 'general'
-                : prompt('Nom du module spécialisé ?')?.trim()
-
+        const moduleName = type === 'general' ? 'general' : prompt('Nom du module spécialisé ?')?.trim()
         if (!moduleName) return
 
-        const id = uuidv4()
-        const title =
+        const alreadyExists = tabs.some(tab =>
             type === 'general'
-                ? `Assistant Général ${tabs.filter(t => t.type === 'general').length + 1}`
-                : `Module: ${moduleName}`
+                ? tab.type === 'general'
+                : tab.type === 'specialized' && tab.module === moduleName
+        )
+
+        if (alreadyExists) {
+            alert('Un assistant existe déjà pour ce module.')
+            return
+        }
+
+        const id = uuidv4()
+        const title = type === 'general'
+            ? `Assistant Général ${tabs.filter(t => t.type === 'general').length + 1}`
+            : `Module: ${moduleName}`
 
         const newTab: AssistantTab = {
             id,
@@ -246,22 +253,37 @@ const AssistantTabs: React.FC<AssistantTabsProps> = ({ type }) => {
 
                 {/* Ajout de tab */}
                 <div className="ml-4 flex gap-2">
-                    <CreateAssistantModal onCreate={(type, module) => {
-                        const id = uuidv4()
-                        const title = type === 'general'
-                            ? `Assistant Général ${tabs.filter(t => t.type === 'general').length + 1}`
-                            : `Module: ${module}`
+                    <CreateAssistantModal
+                        onCreate={(type, module) => {
+                            const alreadyExists = tabs.some(
+                                t => t.module === (type === 'general' ? 'general' : module)
+                            )
 
-                        const newTab: AssistantTab = {
-                            id,
-                            module: type === 'general' ? 'general' : module || '',
-                            title,
-                            type,
-                        }
+                            if (alreadyExists) {
+                                toast.error('Un assistant existe déjà pour ce module.')
+                                return
+                            }
 
-                        setTabs(prev => [...prev, newTab])
-                        setActiveTabId(id)
-                    }} />
+                            const id = uuidv4()
+                            const title =
+                                type === 'general'
+                                    ? `Assistant Général ${tabs.filter(t => t.type === 'general').length + 1}`
+                                    : `Module: ${module}`
+
+                            const newTab: AssistantTab = {
+                                id,
+                                module: type === 'general' ? 'general' : module || '',
+                                title,
+                                type,
+                            }
+
+                            SessionStorage.setForceNewAssistant(id)
+
+                            setTabs(prev => [...prev, newTab])
+                            setActiveTabId(id)
+                        }}
+                    />
+
 
                     <button onClick={() => router.push('/ia/setting')} className="bg-primary text-white px-4 py-2 rounded text-sm"
                     >

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { toast } from 'sonner'
 
 import { Modal } from '@components/dashboard/Modal'
 
@@ -14,7 +15,7 @@ const CreateAssistantModal: React.FC<Props> = ({ onCreate }) => {
 
     const handleSubmit = (handleClose: () => void) => {
         if (type === 'specialized' && !module.trim()) {
-            alert('Veuillez saisir un module.')
+            toast.error('Veuillez saisir un module.')
             return
         }
 
