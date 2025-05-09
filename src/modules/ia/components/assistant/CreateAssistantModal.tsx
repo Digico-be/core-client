@@ -6,11 +6,11 @@ import { toast } from 'sonner'
 import { Modal } from '@components/dashboard/Modal'
 
 interface Props {
-    onCreate: (type: 'general' | 'specialized', module?: string) => void
+    onCreate: (type: 'general' | 'specialized' | 'radar', module?: string) => void
 }
 
 const CreateAssistantModal: React.FC<Props> = ({ onCreate }) => {
-    const [type, setType] = useState<'general' | 'specialized'>('general')
+    const [type, setType] = useState<'general' | 'specialized' | 'radar'>('general')
     const [module, setModule] = useState('')
 
     const handleSubmit = (handleClose: () => void) => {
@@ -43,6 +43,7 @@ const CreateAssistantModal: React.FC<Props> = ({ onCreate }) => {
                             >
                                 <option value="general">Général</option>
                                 <option value="specialized">Spécialisé</option>
+                                <option value="radar">Radar</option>
                             </select>
                         </div>
 

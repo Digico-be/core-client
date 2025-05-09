@@ -2,6 +2,7 @@
 
 import React, {useEffect, useRef, useState} from 'react'
 import { useRouterWithTenant } from '@digico/utils'
+import { toast } from 'sonner'
 import { v4 as uuidv4 } from 'uuid'
 
 import { destroyAssistant } from '../../services/assistant'
@@ -13,9 +14,6 @@ import { SessionStorage } from '../../utils/sessions'
 
 import AssistantTabContent from './AssistantTabContent'
 import CreateAssistantModal from './CreateAssistantModal'
-import { toast } from 'sonner'
-
-
 
 interface AssistantTabsProps {
     type: 'general' | 'specialized'
@@ -214,8 +212,6 @@ const AssistantTabs: React.FC<AssistantTabsProps> = ({ type }) => {
                                     }
                                 }}
 
-
-
                                 className={`px-4 py-4 rounded-t-lg cursor-pointer whitespace-nowrap ${
                                     tab.id === activeTabId ? 'bg-white font-bold' : 'bg-gray-400'
                                 }`}
@@ -255,10 +251,12 @@ const AssistantTabs: React.FC<AssistantTabsProps> = ({ type }) => {
                 <div className="ml-4 flex gap-2">
                     <CreateAssistantModal
                         onCreate={(type, module) => {
-                            const alreadyExists = tabs.some(
-                                t => t.module === (type === 'general' ? 'general' : module)
-                            )
+                            const moduleName =
+                                type === 'radar' ? 'radar' :
+                                    type === 'general' ? 'general' :
+                                        module
 
+                            const alreadyExists = tabs.some(t => t.module === moduleName)
                             if (alreadyExists) {
                                 toast.error('Un assistant existe déjà pour ce module.')
                                 return
@@ -268,23 +266,22 @@ const AssistantTabs: React.FC<AssistantTabsProps> = ({ type }) => {
                             const title =
                                 type === 'general'
                                     ? `Assistant Général ${tabs.filter(t => t.type === 'general').length + 1}`
-                                    : `Module: ${module}`
+                                    : type === 'radar'
+                                        ? 'Radar'
+                                        : `Module: ${module}`
 
                             const newTab: AssistantTab = {
                                 id,
-                                module: type === 'general' ? 'general' : module || '',
+                                module: moduleName || '',
                                 title,
-                                type,
+                                type: type === 'radar' ? 'specialized' : type,
                             }
 
                             SessionStorage.setForceNewAssistant(id)
-
                             setTabs(prev => [...prev, newTab])
                             setActiveTabId(id)
                         }}
                     />
-
-
                     <button onClick={() => router.push('/ia/setting')} className="bg-primary text-white px-4 py-2 rounded text-sm"
                     >
                         Voir les réglages

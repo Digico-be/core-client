@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React from 'react'
 
 import { useThreadTabsContext } from '../../hooks/useThreadTabsContext';
 
@@ -42,7 +42,9 @@ export const ThreadSidebar: React.FC = () => {
 
             <button
                 className="mt-4 bg-primary text-white text-sm px-3 py-2 rounded hover:bg-blue-600"
-                onClick={addThread}
+                onClick={() => {
+                    addThread();
+                }}
             >
                 Nouvelle conversation
             </button>

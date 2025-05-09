@@ -31,22 +31,29 @@ export const useThreadTabs = (
     /* création interne */
     const addThreadInternal = useCallback(
         async (id: string, mod?: string) => {
-            if (sessionStorage.getItem(LOCK_KEY(tabId)) === 'true') return
-            sessionStorage.setItem(LOCK_KEY(tabId), 'true')
+            if (sessionStorage.getItem(LOCK_KEY(tabId)) === 'true') {
+                console.warn('[useThreadTabs] → Création bloquée');
+                return;
+            }
+
+            sessionStorage.setItem(LOCK_KEY(tabId), 'true');
 
             try {
-                const open = await ThreadService.createThread(id, mod)
-                const saved = await laravelCreateThread(open.id, id, mod)
-                const threadId = saved.id ?? open.id
-                setThreads(prev => [...prev, threadId])
-                setActiveThreadId(threadId)
+                const open = await ThreadService.createThread(id, mod);
+                const saved = await laravelCreateThread(open.id, id, mod);
+                const threadId = saved.id ?? open.id;
+                setThreads(prev => [...prev, threadId]);
+                setActiveThreadId(threadId);
             } catch (err) {
-                console.error('[useThreadTabs] Erreur création thread :', err)
-                sessionStorage.removeItem(LOCK_KEY(tabId))
+                console.error('[useThreadTabs] Erreur création thread :', err);
+            } finally {
+                sessionStorage.removeItem(LOCK_KEY(tabId));
             }
         },
         [tabId]
-    )
+    );
+
+
 
     /* chargement initial */
     const loadThreads = useCallback(async () => {
@@ -66,7 +73,7 @@ export const useThreadTabs = (
                     return
                 }
             } catch {
-                /* JSON invalide : on ignore et on repart proprement */
+                /* JSON invalide: on ignore et on repart proprement */
             }
         }
 
@@ -106,9 +113,15 @@ export const useThreadTabs = (
 
     /* API */
     const addThread = useCallback(async () => {
-        if (!assistantId || !hasFetchedFromDB) return
-        await addThreadInternal(assistantId, module)
-    }, [assistantId, module, hasFetchedFromDB, addThreadInternal])
+        if (!assistantId) {
+            console.warn('[useThreadTabs] addThread → Pas de assistantId, création annulée');
+            return;
+        }
+
+        // ⚠️ on autorise l’appel même si hasFetchedFromDB est faux
+        await addThreadInternal(assistantId, module);
+    }, [assistantId, module, addThreadInternal]);
+
 
     const removeThread = useCallback(
         async (threadId: string) => {
