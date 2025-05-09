@@ -30,15 +30,13 @@ const AssistantTabContent: React.FC<Props> = ({ tabId, module, type }) => {
     const [threadReady, setThreadReady] = useState(false);
 
     useEffect(() => {
-        // On attend assistant + hasFetchedFromDB + threads non null
         if (!assistant || threadsLoading || !hasFetchedFromDB) return;
 
         // Evite double appel si déjà prêt
         if (threadReady) return;
 
-        // 🔒 Sécurité : si threads !== undefined mais vide
+        // Sécurité
         if (threads.length === 0) {
-            console.debug('[AssistantTabContent] Aucun thread, création…');
             addThread().then(() => setThreadReady(true));
         } else {
             console.debug('[AssistantTabContent] Thread déjà existant');

@@ -5,9 +5,10 @@ export const StreamService = {
         message: string,
         onToken: (token: string) => void,
         workspace: string,
+        module: string,
         onFunctionCall?: (name: string, args: string) => void
     ): Promise<string> => {
-        const reader = await StreamApiHelper.streamMessageToAssistant(message, workspace);
+        const reader = await StreamApiHelper.streamMessageToAssistant(message, workspace, module);
         const decoder = new TextDecoder();
         let fullResponse = '';
 

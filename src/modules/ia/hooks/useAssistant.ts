@@ -31,20 +31,39 @@ export const useAssistant = (module: string, tabId: string, type: string) => {
             const all = await readAssistants({ module })
             const assistants: Assistant[] = Array.isArray(all) ? all : (all?.data ?? [])
 
-            // ─── 1. Réutiliser l’assistant existant si possible ───
-            if (!forceNew && assistants.length > 0) {
-                const existing = assistants[0]
+            const expectedType = module === 'radar' ? 'specialized' : type
+
+            // 🔐 1. Priorité à l'openai_id stocké
+            const storedOpenAiId = SessionStorage.getAssistantOpenAiIdForTab(tabId)
+            const stored = assistants.find(
+                (a) => a.openai_id === storedOpenAiId && a.type === expectedType
+            )
+
+            if (!forceNew && stored) {
+                return stored
+            }
+
+            // 🔄 2. Sinon, on cherche un assistant existant du bon type
+            const matching = assistants.filter((a) => a.type === expectedType)
+
+            if (!forceNew && matching.length > 0) {
+                const existing = matching[0]
                 SessionStorage.setAssistantOpenAiIdForTab(tabId, existing.openai_id)
                 setAssistantOpenAiId(existing.openai_id)
                 return existing
             }
 
-            // ─── 2. Sinon, créer un nouvel assistant ───
+            // 🆕 3. Création d'un nouvel assistant
             const assistantName = module
             const newOA = (await AssistantService.createAssistant(assistantName)) as OpenAiAssistant
 
-            // Configuration spéciale pour Radar
             const isRadar = module === 'radar'
+
+            const toolsToSave = newOA.tools ?? [];
+
+
+            console.log('🛠️ Tools envoyés à Laravel :', toolsToSave);
+
             const saved = await createAssistant({
                 openai_id: newOA.id,
                 name: isRadar ? 'Radar' : newOA.name,
@@ -61,18 +80,26 @@ Responsables (CEO, fondateurs, etc.)
 Informations de contact (site web, téléphone, email professionnel si disponible)
 Réseaux sociaux et actualités récentes
 Tu dois :
-Prioriser les sources fiables comme le site officiel de l’entreprise, companyweb.be,  Crunchbase, Societe.com, Infogreffe, etc.
+Prioriser les sources fiables comme le site officiel de l’entreprise, companyweb.be, Crunchbase, Societe.com, Infogreffe, etc.
 Résumer les informations clairement.
+
 Indiquer si certaines données sont indisponibles ou incertaines mais ne pas mettre null.
 Refuser toute recherche qui violerait la vie privée ou les politiques d’usage (ex : données personnelles non publiques).
 Si l’entreprise n’existe pas ou est trop peu connue, indique-le poliment. Si la demande est ambiguë, demande des précisions.
 Tu es toujours courtois, synthétique et orienté efficacité.`
                     : newOA.instructions,
-                tools: isRadar
-                    ? [{ type: 'web_search_preview' }]
-                    : newOA.tools,
-                type: module === 'radar' ? 'specialized' : (type as 'specialized' | 'general')
+                tools: toolsToSave,
+                type: expectedType as 'specialized' | 'general',
             })
+            console.log('📦 Assistant enregistré côté Laravel :', {
+                id: saved.openai_id,
+                name: saved.name,
+                module: saved.module,
+                type: saved.type,
+                model: saved.model,
+                tools: saved.tools,
+                isRadar,
+            });
 
             SessionStorage.setAssistantOpenAiIdForTab(tabId, saved.openai_id)
             SessionStorage.setAssistantCreatedForTab(tabId)
@@ -84,6 +111,7 @@ Tu es toujours courtois, synthétique et orienté efficacité.`
             setAssistantOpenAiId(saved.openai_id)
             return saved
         }
+
     })
 
     const deleteMutation = useMutation({

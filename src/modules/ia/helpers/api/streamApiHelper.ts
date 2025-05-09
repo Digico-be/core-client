@@ -1,9 +1,9 @@
 export const StreamApiHelper = {
-    streamMessageToAssistant: async (message: string, workspace: string): Promise<ReadableStreamDefaultReader <Uint8Array>> => {
+    streamMessageToAssistant: async (message: string, workspace: string, module: string): Promise<ReadableStreamDefaultReader <Uint8Array>> => {
         const res = await fetch("/api/stream", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message, workspace }),
+            body: JSON.stringify({ message, workspace, module }),
         });
 
         if (!res.ok || !res.body) {

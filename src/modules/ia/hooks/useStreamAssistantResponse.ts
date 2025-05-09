@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react'
 
 import { StreamService } from '../services/OpenAi/streamService'
 
-export function useStreamAssistantResponse(workspaceSlug: string) {
+export function useStreamAssistantResponse(workspaceSlug: string, module: string) {
     const [streamedResponse, setStreamedResponse] = useState('')
 
     const stream = useCallback(
@@ -18,14 +18,15 @@ export function useStreamAssistantResponse(workspaceSlug: string) {
                     if (first) first = false
                 },
                 workspaceSlug,
-                () => {}
+                module // <-- Ajout ici
             )
 
             setStreamedResponse('')
             return full
         },
-        [workspaceSlug]
+        [workspaceSlug, module]
     )
 
     return { streamedResponse, stream }
 }
+

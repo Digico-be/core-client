@@ -22,7 +22,7 @@ export const useChatThread = (
 ) => {
     const [thread, setThread] = useState<Thread | null>(null)
     const { messages, setMessages, deleteMessage, editMessage: baseEditMessage } = useThreadMessages()
-    const { streamedResponse, stream } = useStreamAssistantResponse(workspaceSlug)
+    const { streamedResponse, stream } = useStreamAssistantResponse(workspaceSlug, module)
     const lastSeqRef = useRef(0)
 
     useEffect(() => {

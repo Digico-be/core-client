@@ -1,57 +1,86 @@
-import { createLangChainAgent } from '../../../modules/ia/utils/langchainAgent'
+
+import OpenAI from 'openai'
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
 export async function POST(req: Request) {
-    const { message, workspace } = await req.json();
+    const { message, workspace, module } = await req.json() // On reçoit aussi `module`
 
     try {
-        const agent = await createLangChainAgent(workspace);
-        const result = await agent.invoke({ input: message });
+        // 🟢 CAS SPÉCIAL RADAR : utilisation de web_search_preview
+        if (module === 'radar') {
+            const response = await openai.responses.create({
+                model: 'gpt-4.1',
+                tools: [{ type: 'web_search_preview' }],
+                input: message,
+            })
 
-        // ✅ On crée un vrai flux streaming avec la réponse complète
+            // Création du flux pour retourner la réponse à l’utilisateur
+            const stream = new ReadableStream({
+                start(controller) {
+                    const encoder = new TextEncoder()
+                    controller.enqueue(encoder.encode(JSON.stringify({
+                        type: 'full',
+                        content: response.output_text,
+                    }) + '\n'))
+                    controller.close()
+                }
+            })
+
+            return new Response(stream, {
+                headers: {
+                    'Content-Type': 'text/event-stream',
+                    'Cache-Control': 'no-cache',
+                    'Connection': 'keep-alive',
+                }
+            })
+        }
+
+        // ⚙️ AUTRES MODULES : on conserve LangChain
+        const { createLangChainAgent } = await import('../../../modules/ia/utils/langchainAgent')
+        const agent = await createLangChainAgent(workspace)
+        const result = await agent.invoke({ input: message })
+
         const stream = new ReadableStream({
             start(controller) {
-                const encoder = new TextEncoder();
-
-                const jsonLine = JSON.stringify({
-                    type: "full",
+                const encoder = new TextEncoder()
+                controller.enqueue(encoder.encode(JSON.stringify({
+                    type: 'full',
                     content: result.output,
-                });
-
-                controller.enqueue(encoder.encode(jsonLine + "\n"));
-                controller.close();
-            },
-        });
+                }) + '\n'))
+                controller.close()
+            }
+        })
 
         return new Response(stream, {
             headers: {
-                "Content-Type": "text/event-stream",
-                "Cache-Control": "no-cache",
-                "Connection": "keep-alive",
-            },
-        });
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+            }
+        })
     } catch (err: any) {
-        console.error("❌ Erreur LangChain Agent :", err);
+        console.error('❌ Erreur traitement assistant :', err)
 
+        // Gestion d’erreur avec un flux d’erreur formaté
         const stream = new ReadableStream({
             start(controller) {
-                const encoder = new TextEncoder();
-                const errorLine = JSON.stringify({
-                    type: "error",
-                    content: err.message || "Erreur inconnue",
-                });
-
-                controller.enqueue(encoder.encode(errorLine + "\n"));
-                controller.close();
-            },
-        });
+                const encoder = new TextEncoder()
+                controller.enqueue(encoder.encode(JSON.stringify({
+                    type: 'error',
+                    content: err.message || 'Erreur inconnue',
+                }) + '\n'))
+                controller.close()
+            }
+        })
 
         return new Response(stream, {
             status: 500,
             headers: {
-                "Content-Type": "text/event-stream",
-                "Cache-Control": "no-cache",
-                "Connection": "keep-alive",
-            },
-        });
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+            }
+        })
     }
 }
