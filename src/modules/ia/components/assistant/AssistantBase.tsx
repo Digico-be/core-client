@@ -1,27 +1,29 @@
-'use client';
+'use client'
 
-import React, { useEffect } from 'react';
+import React, { useEffect } from 'react'
 import { useAuth, useRouterWithTenant } from '@digico/utils'
 
-import { useAssistant } from '../../hooks/useAssistant';
-import { useChatThread } from '../../hooks/useChatThread';
-import { useThreadTabsContext } from '../../hooks/useThreadTabsContext';
+import { useAssistant } from '../../hooks/useAssistant'
+import { useChatThread } from '../../hooks/useChatThread'
+import { useThreadTabsContext } from '../../hooks/useThreadTabsContext'
 
-import { Icon } from '@components/Icon';
+import { Icon } from '@components/Icon'
 
-import MessageInput from '../message/MessageInput';
+import MessageInput from '../message/MessageInput'
 
 interface Props {
-    module: string;
-    tabId: string;
-    type: string;
+    module: string
+    tabId: string
+    type: string
 }
 
 const AssistantBase: React.FC<Props> = ({ module, tabId, type }) => {
-    const { data: assistant, isError, error } = useAssistant(module, tabId, type);
-    const { activeThreadId, threads, addThread, isLoading: threadsLoading } = useThreadTabsContext();
-    const { tenant } = useAuth();
+    const { data: assistant, isError, error } = useAssistant(module, tabId, type)
+    const { activeThreadId, threads, addThread, isLoading: threadsLoading } = useThreadTabsContext()
+    const { tenant } = useAuth()
     const router = useRouterWithTenant()
+
+    const initialThreadId = activeThreadId || undefined
 
     const {
         messages,
@@ -35,42 +37,42 @@ const AssistantBase: React.FC<Props> = ({ module, tabId, type }) => {
         assistant?.openai_id ?? '',
         module,
         tenant?.name ?? '',
-        activeThreadId ?? undefined
-    );
+        initialThreadId
+    )
 
     useEffect(() => {
-        if (!assistant?.openai_id || threadsLoading) return;
-        if (threads.length === 0) {
-            addThread();
-        }
-    }, [assistant?.openai_id, threads.length, threadsLoading, addThread]);
+        if (!assistant?.openai_id || threadsLoading) return
 
-    // 1) Erreur réseau / données
+        if (threads.length === 0) {
+            addThread()
+        }
+    }, [assistant?.openai_id, threads.length, threadsLoading, addThread])
+
     if (isError) {
+        console.error('❌ Erreur de chargement assistant :', error)
         return (
             <p className="p-4 text-center text-red-500">
                 {(error as Error)?.message || 'Erreur de chargement'}
             </p>
-        );
+        )
     }
 
-    // 2) Tant que l'assistant n'est pas encore arrivé
     if (!assistant) {
-        return <p className="p-4 text-center">Chargement…</p>;
+        console.log('⌛ Chargement de l’assistant en cours...')
+        return <p className="p-4 text-center">Chargement…</p>
     }
 
-    // 3) Tant que le thread n'existe pas
     if (!activeThreadId || !thread) {
-        return <p className="p-4 text-center">Chargement du thread…</p>;
+        return <p className="p-4 text-center">Chargement du thread…</p>
     }
 
     const toSettings = () => {
-        router.push(`/ia/setting/${assistant.openai_id}`);
-    };
-    // 4) Enfin, l'affichage principal
+        console.log('⚙️ Redirection vers les paramètres de l’assistant')
+        router.push(`/ia/setting/${assistant.openai_id}`)
+    }
+
     return (
         <div className="bg-white pt-4 flex flex-col flex-1 overflow-hidden">
-
             <div className="flex items-center justify-between px-4 mb-2">
                 <h1 className="text-2xl font-bold text-center mb-4">
                     {assistant.name}
@@ -97,14 +99,16 @@ const AssistantBase: React.FC<Props> = ({ module, tabId, type }) => {
                 tabId={tabId}
                 messages={messages}
                 streamedResponse={streamedResponse}
-                sendMessage={sendMessage}
+                sendMessage={(...args) => {
+                    return sendMessage(...args)
+                }}
                 deleteMessage={deleteMessage}
                 editMessage={editMessage}
                 thread={thread}
                 compact={tabId === 'floating-window-general'}
             />
         </div>
-    );
-};
+    )
+}
 
-export default AssistantBase;
+export default AssistantBase

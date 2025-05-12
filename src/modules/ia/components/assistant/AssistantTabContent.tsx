@@ -39,12 +39,11 @@ const AssistantTabContent: React.FC<Props> = ({ tabId, module, type }) => {
         if (threads.length === 0) {
             addThread().then(() => setThreadReady(true));
         } else {
-            console.debug('[AssistantTabContent] Thread déjà existant');
             setThreadReady(true);
         }
     }, [assistant, threads.length, threadsLoading, hasFetchedFromDB, threadReady, addThread]);
 
-    // ✅ Ne pas afficher tant que tout n’est pas prêt
+    // Ne pas afficher tant que tout n’est pas prêt
     if (assistantLoading || threadsLoading || !threadReady) {
         return <p className="p-4 text-center">Chargement…</p>;
     }

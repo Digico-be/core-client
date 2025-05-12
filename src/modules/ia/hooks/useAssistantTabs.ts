@@ -6,23 +6,28 @@ import { AssistantTab } from '../models/assistantTab'
 
 export const useAssistantTabs = (type: 'general' | 'specialized') => {
     const [tabs, setTabs] = useState<AssistantTab[]>(() => {
+        if (typeof window === 'undefined') return []
         const stored = sessionStorage.getItem(`assistant_tabs_${type}`)
         return stored ? JSON.parse(stored) : []
     })
 
     const [activeTabId, setActiveTabId] = useState<string | null>(() => {
+        if (typeof window === 'undefined') return null
         return sessionStorage.getItem(`active_assistant_tab_${type}`) || null
     })
 
 
     useEffect(() => {
+        if (typeof window === 'undefined') return
         const storedTabs = sessionStorage.getItem(`assistant_tabs_${type}`)
         const storedActive = sessionStorage.getItem(`active_assistant_tab_${type}`)
         if (storedTabs) setTabs(JSON.parse(storedTabs))
         if (storedActive) setActiveTabId(storedActive)
     }, [type])
 
+
     useEffect(() => {
+        if (typeof window === 'undefined') return
         sessionStorage.setItem(`assistant_tabs_${type}`, JSON.stringify(tabs))
         sessionStorage.setItem(`active_assistant_tab_${type}`, activeTabId ?? '')
     }, [tabs, activeTabId, type])
