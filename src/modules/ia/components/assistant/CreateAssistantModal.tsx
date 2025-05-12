@@ -5,6 +5,9 @@ import { toast } from 'sonner'
 
 import { Modal } from '@components/dashboard/Modal'
 
+import { assistantTemplates } from '../../config/assistantTemplates'
+
+
 interface Props {
     onCreate: (type: 'general' | 'specialized' | 'radar', module?: string) => void
 }
@@ -13,13 +16,25 @@ const CreateAssistantModal: React.FC<Props> = ({ onCreate }) => {
     const [type, setType] = useState<'general' | 'specialized' | 'radar'>('general')
     const [module, setModule] = useState('')
 
+    const specializedModules = Object.entries(assistantTemplates.specialized.modules ?? {}).map(
+        ([key, val]) => ({
+            value: key,
+            label: val.name || key,
+        }),
+    )
+
     const handleSubmit = (handleClose: () => void) => {
         if (type === 'specialized' && !module.trim()) {
-            toast.error('Veuillez saisir un module.')
+            toast.error('Veuillez sélectionner un module.')
             return
         }
 
-        onCreate(type, module.trim())
+        if (type === 'radar') {
+            onCreate('radar', 'radar')
+        } else {
+            onCreate(type, type === 'general' ? 'general' : module.trim())
+        }
+
         handleClose()
     }
 
@@ -34,12 +49,15 @@ const CreateAssistantModal: React.FC<Props> = ({ onCreate }) => {
             <Modal.Content>
                 {({ handleClose }) => (
                     <div className="flex flex-col gap-4">
+                        {/* Type */}
                         <div className="w-full">
                             <label className="font-semibold text-sm">Type d’assistant</label>
                             <select
                                 className="w-full p-2 border rounded"
                                 value={type}
-                                onChange={(e) => setType(e.target.value as 'general' | 'specialized')}
+                                onChange={(e) =>
+                                    setType(e.target.value as 'general' | 'specialized' | 'radar')
+                                }
                             >
                                 <option value="general">Général</option>
                                 <option value="specialized">Spécialisé</option>
@@ -47,16 +65,22 @@ const CreateAssistantModal: React.FC<Props> = ({ onCreate }) => {
                             </select>
                         </div>
 
+                        {/* Module (uniquement si spécialisé) */}
                         {type === 'specialized' && (
                             <div className="w-full">
-                                <label className="font-semibold text-sm">Nom du module</label>
-                                <input
-                                    type="text"
+                                <label className="font-semibold text-sm">Module spécialisé</label>
+                                <select
                                     className="w-full p-2 border rounded"
-                                    placeholder="ex: billing"
                                     value={module}
                                     onChange={(e) => setModule(e.target.value)}
-                                />
+                                >
+                                    <option value="">— Choisir un module —</option>
+                                    {specializedModules.map((mod) => (
+                                        <option key={mod.value} value={mod.value}>
+                                            {mod.label}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                         )}
 

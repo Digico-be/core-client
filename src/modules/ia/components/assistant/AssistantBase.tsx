@@ -14,7 +14,7 @@ import MessageInput from '../message/MessageInput'
 interface Props {
     module: string
     tabId: string
-    type: string
+    type: 'general' | 'specialized' | 'radar'
 }
 
 const AssistantBase: React.FC<Props> = ({ module, tabId, type }) => {
@@ -24,6 +24,10 @@ const AssistantBase: React.FC<Props> = ({ module, tabId, type }) => {
     const router = useRouterWithTenant()
 
     const initialThreadId = activeThreadId || undefined
+
+    console.log(
+        'Assistant', assistant
+    )
 
     const {
         messages,
