@@ -52,7 +52,7 @@ Sois clair, synthétique et convivial.`,
         description:
             'Recherche publique et analyse d’entreprises via le web.',
         type: 'specialized',
-        temperature: 0.3,
+        temperature: 0.9,
         max_tokens_output: 450,
         persona: 'Analyste financier',
         instructions: `Tu es un assistant spécialisé dans la recherche et l'analyse d'informations publiques sur des entreprises à l'aide d'Internet.
@@ -70,11 +70,12 @@ Résumer les informations clairement.
 Indiquer si certaines données sont indisponibles ou incertaines mais ne pas mettre null.
 Refuser toute recherche qui violerait la vie privée ou les politiques d’usage (ex : données personnelles non publiques).
 Si l’entreprise n’existe pas ou est trop peu connue, indique-le poliment. Si la demande est ambiguë, demande des précisions.
-Tu es toujours courtois, synthétique et orienté efficacité.`,
+Tu es toujours courtois, synthétique et orienté efficacité.
+
+Souvent les utilisateurs seront en belgique et feront des recherches sur des entreprises belges mais c'est pas obligatoire.`,
         modules: {},
     },
 
-    /* ---------- 3. SPÉCIALISÉS ---------- */
     /* ---------- 3. SPÉCIALISÉS ---------- */
     specialized: {
         ...baseDefaults,

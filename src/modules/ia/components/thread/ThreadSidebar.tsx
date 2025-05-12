@@ -1,7 +1,6 @@
 'use client';
 
-import React from 'react'
-
+import React from 'react';
 import { useThreadTabsContext } from '../../hooks/useThreadTabsContext';
 
 export const ThreadSidebar: React.FC = () => {
@@ -18,7 +17,7 @@ export const ThreadSidebar: React.FC = () => {
             <h2 className="text-lg font-semibold mb-2">Conversations</h2>
 
             <div className="flex-1 overflow-y-auto flex flex-col gap-2 min-h-0">
-                {threads.map((id: string) => (
+                {threads.map((id: string, index: number) => (
                     <div
                         key={id}
                         onClick={() => setActiveThreadId(id)}
@@ -26,7 +25,7 @@ export const ThreadSidebar: React.FC = () => {
                             activeThreadId === id ? 'bg-white font-bold shadow' : 'hover:bg-gray-200'
                         }`}
                     >
-                        <span>Thread {id.slice(0, 4)}</span>
+                        <span>Conversation {index + 1}</span>
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
