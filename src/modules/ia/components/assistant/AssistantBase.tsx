@@ -25,10 +25,6 @@ const AssistantBase: React.FC<Props> = ({ module, tabId, type }) => {
 
     const initialThreadId = activeThreadId || undefined
 
-    console.log(
-        'Assistant', assistant
-    )
-
     const {
         messages,
         streamedResponse,

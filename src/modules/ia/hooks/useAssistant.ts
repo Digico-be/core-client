@@ -42,11 +42,10 @@ export const useAssistant = (
             const all = await readAssistants({ module });
             const assistants: Assistant[] = Array.isArray(all) ? all : all?.data ?? [];
 
-            const isRadar = type === 'radar' || module === 'radar';
-            const template = getAssistantTemplate(
-                (isRadar ? 'radar' : type) as 'radar' | 'general' | 'specialized',
-                module,
-            );
+            const forcedType: 'general' | 'radar' | 'specialized' =
+                module === 'radar' ? 'radar' : type;
+
+            const template = getAssistantTemplate(forcedType, module);
             const expectedType = template.type;
 
             const storedOpenAiId = SessionStorage.getAssistantOpenAiIdForTab(tabId);
@@ -55,7 +54,13 @@ export const useAssistant = (
             );
             if (!forceNew && stored) return stored;
 
-            const matching = assistants.filter((a) => a.type === expectedType);
+            const matching = assistants.filter((a) => {
+                if (expectedType === 'specialized') {
+                    return a.module === module && a.type === 'specialized';
+                }
+                return a.type === expectedType;
+            });
+
             if (!forceNew && matching.length > 0) {
                 const existing = matching[0];
                 SessionStorage.setAssistantOpenAiIdForTab(tabId, existing.openai_id);

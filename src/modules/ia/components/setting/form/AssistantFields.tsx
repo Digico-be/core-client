@@ -11,7 +11,6 @@ import { Icon } from '@components/Icon'
 
 import 'react-tooltip/dist/react-tooltip.css'
 
-/* Tooltip réutilisable */
 const InfoTooltip = ({ id, content }: { id: string; content: string }) => (
   <>
     <span

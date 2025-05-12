@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+
 import { useThreadTabsContext } from '../../hooks/useThreadTabsContext';
 
 export const ThreadSidebar: React.FC = () => {
