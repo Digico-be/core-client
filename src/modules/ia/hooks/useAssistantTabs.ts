@@ -4,7 +4,7 @@ import { readAssistants } from '../services/assistant'
 
 import { AssistantTab } from '../models/assistantTab'
 
-export const useAssistantTabs = (type: 'general' | 'specialized') => {
+export const useAssistantTabs = (type: 'general' | 'specialized' | 'radar') => {
     const [tabs, setTabs] = useState<AssistantTab[]>(() => {
         if (typeof window === 'undefined') return []
         const stored = sessionStorage.getItem(`assistant_tabs_${type}`)
@@ -16,7 +16,6 @@ export const useAssistantTabs = (type: 'general' | 'specialized') => {
         return sessionStorage.getItem(`active_assistant_tab_${type}`) || null
     })
 
-
     useEffect(() => {
         if (typeof window === 'undefined') return
         const storedTabs = sessionStorage.getItem(`assistant_tabs_${type}`)
@@ -24,7 +23,6 @@ export const useAssistantTabs = (type: 'general' | 'specialized') => {
         if (storedTabs) setTabs(JSON.parse(storedTabs))
         if (storedActive) setActiveTabId(storedActive)
     }, [type])
-
 
     useEffect(() => {
         if (typeof window === 'undefined') return
@@ -39,8 +37,8 @@ export const useAssistantTabs = (type: 'general' | 'specialized') => {
             id: a.openai_id,
             title: a.name,
             module: a.module,
-            type,
-        }));
+            type
+        }))
 
         setTabs(newTabs)
         setActiveTabId(newTabs[0]?.id ?? null)
@@ -51,6 +49,6 @@ export const useAssistantTabs = (type: 'general' | 'specialized') => {
         setTabs,
         activeTabId,
         setActiveTabId,
-        initTabsFromAssistants,
+        initTabsFromAssistants
     }
 }

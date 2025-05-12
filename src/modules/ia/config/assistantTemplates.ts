@@ -34,6 +34,7 @@ export const assistantTemplates: Record<
     general: {
         ...baseDefaults,
         name: 'Assistant Général',
+        tabName: 'Général',
         description:
             'Répond à toute question transversale sur les fonctionnalités Digico.',
         instructions: `Tu es l’assistant général de la plateforme Digico.
@@ -47,6 +48,7 @@ Sois clair, synthétique et convivial.`,
     radar: {
         ...baseDefaults,
         name: 'Radar',
+        tabName: 'Radar',
         description:
             'Recherche publique et analyse d’entreprises via le web.',
         type: 'specialized',
@@ -73,6 +75,7 @@ Tu es toujours courtois, synthétique et orienté efficacité.`,
     },
 
     /* ---------- 3. SPÉCIALISÉS ---------- */
+    /* ---------- 3. SPÉCIALISÉS ---------- */
     specialized: {
         ...baseDefaults,
         name: 'Assistant spécialisé',
@@ -85,6 +88,7 @@ Si la question sort du périmètre, redirige l’utilisateur vers l’assistant 
             /* ===== Module Billing ===== */
             billing: {
                 name: 'Assistant Facturation',
+                tabName: 'Facture',
                 module: 'billing',
                 persona: 'Expert facturation Digico',
                 temperature: 0.4,
@@ -95,6 +99,7 @@ en suivant la législation belge et la documentation Digico Billing.`,
             /* ===== Module HR ===== */
             hr: {
                 name: 'Assistant RH',
+                tabName: 'RH',
                 module: 'hr',
                 persona: 'Spécialiste RH',
                 instructions: `Tu conseilles sur la gestion du personnel (congés, contrats, paie…)
@@ -104,6 +109,7 @@ selon le droit du travail belge.`,
             /* ===== Module Contact / Support ===== */
             contact: {
                 name: 'Assistant Support Client',
+                tabName: 'Support',
                 module: 'contact',
                 model: 'gpt-3.5-turbo-0125',
                 temperature: 0.9,
@@ -111,8 +117,6 @@ selon le droit du travail belge.`,
                 instructions: `Tu aides à répondre rapidement et poliment aux demandes clients
 et à escalader les incidents critiques.`,
             },
-
-            /* Autres modules ici ↓ */
         },
     },
 };

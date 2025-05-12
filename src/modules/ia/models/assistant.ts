@@ -95,4 +95,10 @@ export interface Assistant {
      * Liste de prompts suggérés pour guider l'utilisateur dans ses interactions avec l'assistant.
      */
     suggested_prompts?: string[]
+
+    /**
+     * Nom court à afficher dans l’onglet.
+     */
+    tabName?: string
+
 }

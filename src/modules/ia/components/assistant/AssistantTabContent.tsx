@@ -13,7 +13,7 @@ import AssistantBase from './AssistantBase';
 interface Props {
     tabId: string;
     module: string;
-    type: 'general' | 'specialized';
+    type: 'general' | 'specialized' | 'radar';
 }
 
 const AssistantTabContent: React.FC<Props> = ({ tabId, module, type }) => {

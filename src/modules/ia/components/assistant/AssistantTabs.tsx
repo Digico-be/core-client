@@ -1,6 +1,6 @@
 'use client'
 
-import React, {useEffect, useRef, useState} from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useRouterWithTenant } from '@digico/utils'
 import { toast } from 'sonner'
 import { v4 as uuidv4 } from 'uuid'
@@ -10,13 +10,14 @@ import { AssistantService } from '../../services/OpenAi/assistantService'
 import { useAssistantTabs } from '../../hooks/useAssistantTabs'
 
 import { AssistantTab } from '../../models/assistantTab'
+import { getAssistantTemplate } from '../../utils/getAssistantTemplate'
 import { SessionStorage } from '../../utils/sessions'
 
 import AssistantTabContent from './AssistantTabContent'
 import CreateAssistantModal from './CreateAssistantModal'
 
 interface AssistantTabsProps {
-    type: 'general' | 'specialized'
+    type: 'general' | 'specialized' | 'radar'
 }
 
 const AssistantTabs: React.FC<AssistantTabsProps> = ({ type }) => {
@@ -34,9 +35,9 @@ const AssistantTabs: React.FC<AssistantTabsProps> = ({ type }) => {
         const el = containerRef.current
         if (!el) return
 
-        let speed = 10               // vitesse initiale
-        const maxSpeed = 80            // vitesse max plus élevée
-        const acceleration = 1.2       // accélération plus rapide
+        let speed = 10
+        const maxSpeed = 80
+        const acceleration = 1.2
 
         scrollInterval.current = setInterval(() => {
             el.scrollBy({ left: direction === 'left' ? -speed : speed, behavior: 'auto' })
@@ -92,11 +93,10 @@ const AssistantTabs: React.FC<AssistantTabsProps> = ({ type }) => {
             return
         }
 
-        const id = uuidv4()
-        const title = type === 'general'
-            ? `Assistant Général ${tabs.filter(t => t.type === 'general').length + 1}`
-            : `Module: ${moduleName}`
+        const template = getAssistantTemplate(type === 'radar' ? 'radar' : type, moduleName)
+        const title = template.tabName || template.module || 'Assistant'
 
+        const id = uuidv4()
         const newTab: AssistantTab = {
             id,
             module: moduleName,
@@ -113,11 +113,8 @@ const AssistantTabs: React.FC<AssistantTabsProps> = ({ type }) => {
 
         if (assistantId) {
             try {
-                // Supprimer OpenAI
-                await AssistantService.deleteAssistant(assistantId);
-
-                // Supprimer DB Laravel
-                await destroyAssistant(assistantId);
+                await AssistantService.deleteAssistant(assistantId)
+                await destroyAssistant(assistantId)
             } catch (err) {
                 console.error('Erreur suppression assistant :', err)
             }
@@ -151,13 +148,11 @@ const AssistantTabs: React.FC<AssistantTabsProps> = ({ type }) => {
             addTab()
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []) // on ignore tabs ici pour éviter les doublons
-
+    }, [])
 
     return (
         <>
             <div className="flex items-center bg-white mb-2">
-                {/* Flèche gauche */}
                 {canScrollLeft && (
                     <button
                         onMouseDown={() => startContinuousScroll('left')}
@@ -171,7 +166,6 @@ const AssistantTabs: React.FC<AssistantTabsProps> = ({ type }) => {
                     </button>
                 )}
 
-                {/* Tabs container */}
                 <div
                     id="tab-scroll-container"
                     ref={containerRef}
@@ -200,24 +194,20 @@ const AssistantTabs: React.FC<AssistantTabsProps> = ({ type }) => {
                                             el.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' })
                                         }
 
-                                        // Centrer après 2 secondes
                                         if (centerTimeout.current) clearTimeout(centerTimeout.current)
 
                                         centerTimeout.current = setTimeout(() => {
                                             el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
                                         }, 2000)
 
-
                                         prevActiveTabId.current = activeTabId
                                     }
                                 }}
-
                                 className={`px-4 py-4 rounded-t-lg cursor-pointer whitespace-nowrap ${
                                     tab.id === activeTabId ? 'bg-white font-bold' : 'bg-gray-400'
                                 }`}
                                 onClick={() => setActiveTabId(tab.id)}
                             >
-
                                 {tab.title}
                                 <button
                                     onClick={(e) => {
@@ -233,7 +223,6 @@ const AssistantTabs: React.FC<AssistantTabsProps> = ({ type }) => {
                     </div>
                 </div>
 
-                {/* Flèche droite */}
                 {canScrollRight && (
                     <button
                         onMouseDown={() => startContinuousScroll('right')}
@@ -247,7 +236,6 @@ const AssistantTabs: React.FC<AssistantTabsProps> = ({ type }) => {
                     </button>
                 )}
 
-                {/* Ajout de tab */}
                 <div className="ml-4 flex gap-2">
                     <CreateAssistantModal
                         onCreate={(type, module) => {
@@ -263,12 +251,11 @@ const AssistantTabs: React.FC<AssistantTabsProps> = ({ type }) => {
                             }
 
                             const id = uuidv4()
-                            const title =
-                                type === 'general'
-                                    ? `Assistant Général ${tabs.filter(t => t.type === 'general').length + 1}`
-                                    : type === 'radar'
-                                        ? 'Radar'
-                                        : `Module: ${module}`
+                            const template = getAssistantTemplate(
+                                type === 'radar' ? 'radar' : type,
+                                moduleName
+                            )
+                            const title = template.tabName || template.module || 'Assistant'
 
                             const newTab: AssistantTab = {
                                 id,
@@ -282,12 +269,9 @@ const AssistantTabs: React.FC<AssistantTabsProps> = ({ type }) => {
                             setActiveTabId(id)
                         }}
                     />
-                    <button onClick={() => router.push('/ia/setting')} className="bg-primary text-white px-4 py-2 rounded text-sm"
-                    >
+                    <button onClick={() => router.push('/ia/setting')} className="bg-primary text-white px-4 py-2 rounded text-sm">
                         Voir les réglages
                     </button>
-
-
                 </div>
             </div>
 
