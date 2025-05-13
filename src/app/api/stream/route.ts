@@ -2,6 +2,7 @@
 import OpenAI from 'openai'
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+const { createLangChainAgent } = await import('../../../modules/ia/utils/langchainAgent')
 
 export async function POST(req: Request) {
     const { message, workspace, module } = await req.json() // On reçoit aussi `module`
@@ -36,8 +37,6 @@ export async function POST(req: Request) {
             })
         }
 
-        // ⚙️ AUTRES MODULES : on conserve LangChain
-        const { createLangChainAgent } = await import('../../../modules/ia/utils/langchainAgent')
         const agent = await createLangChainAgent(workspace)
         const result = await agent.invoke({ input: message })
 

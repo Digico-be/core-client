@@ -8,6 +8,7 @@ import { Assistant } from '../models/assistant'
 import { IAFile } from '../models/file'
 import { Message } from '../models/message'
 import { Thread, ThreadMessageContent } from '../models/thread'
+import { buildContextualPrompt } from '../utils/assistantPromptUtils'
 import { SessionStorage } from '../utils/sessions'
 
 import { useAssistantRun } from './useAssistantRun'
@@ -120,26 +121,7 @@ export const useChatThread = (
                 typeof input === 'string' ? [{ type: 'text', text: input }] : input
 
             const rawText = content.find((c): c is { type: 'text'; text: string } => c.type === 'text')?.text || ''
-
-            // 🧩 Construire le message enrichi pour OpenAI
-            const rulesFormatted = Array.isArray(assistant?.rules)
-                ? assistant.rules
-                : typeof assistant?.rules === 'string'
-                    ? [assistant.rules]
-                    : []
-
-            const metadataFormatted = assistant?.metadata
-                ? Object.entries(assistant.metadata).map(([k, v]) => `- ${k}: ${v}`).join('\n')
-                : ''
-
-            const enrichedText = [
-                assistant?.persona ? `👤 Persona : ${assistant.persona}` : '',
-                assistant?.instructions ? `🧠 Instructions : ${assistant.instructions}` : '',
-                rulesFormatted.length ? `📜 Règles :\n- ${rulesFormatted.join('\n- ')}` : '',
-                metadataFormatted ? `📌 Métadonnées :\n${metadataFormatted}` : '',
-                '',
-                rawText
-            ].filter(Boolean).join('\n\n')
+            const enrichedText = buildContextualPrompt(assistant, rawText)
 
             console.log('🧾 Message enrichi envoyé à OpenAI :\n', enrichedText)
 
@@ -159,7 +141,7 @@ export const useChatThread = (
                     {
                         id: userRes.id,
                         sender: 'user',
-                        content: rawText, // ✅ n'affiche que le message original
+                        content: rawText,
                         timestamp: new Date(userRes.created_at * 1000).toISOString(),
                         threadId: thread.id,
                         attachments: attachments?.map(f => ({
@@ -238,7 +220,9 @@ export const useChatThread = (
             })
 
             addThinking(threadId)
-            const full = await stream(newContent, removeThinking)
+            const enrichedText = buildContextualPrompt(assistant, newContent)
+            const full = await stream(enrichedText, removeThinking)
+
             if (!thread?.id || !full.trim()) return
 
             const aRes = await ThreadService.sendMessageToThread(
@@ -254,7 +238,7 @@ export const useChatThread = (
                 threadId: thread.id
             })
         },
-        [thread, stream, baseEditMessage, addThinking, removeThinking, pushAssistantMessage, setMessages]
+        [thread, stream, baseEditMessage, addThinking, removeThinking, pushAssistantMessage, setMessages, messages, assistant]
     )
 
     return {
