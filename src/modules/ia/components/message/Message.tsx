@@ -6,44 +6,47 @@ import rehypeRaw from 'rehype-raw'
 
 import AttachmentPreview from '../file/AttachmentPreview'
 
+interface Attachment {
+    openai_id: string
+    filename: string
+    size: number
+    mime_type: string
+}
+
 interface MessageProps {
     id: string
     content: string
     sender: 'user' | 'assistant'
     timestamp?: string | null
     type?: 'text' | 'file'
-    attachments?: {
-        openai_id: string
-        filename: string
-        size: number
-        mime_type: string
-    }[]
+    attachments?: Attachment[]
     onDelete: (id: string) => void
     onEdit: (id: string, newContent: string) => void
 }
 
-const Message: React.FC<MessageProps> = ({ id, content, sender, timestamp, type = 'text', attachments = [], onDelete, onEdit }) => {
+const Message: React.FC<MessageProps> = ({
+                                             id,
+                                             content,
+                                             sender,
+                                             timestamp,
+                                             type = 'text',
+                                             attachments = [],
+                                             onDelete,
+                                             onEdit,
+                                         }) => {
     const [isEditing, setIsEditing] = useState(false)
     const [editedText, setEditedText] = useState(content)
 
-    const formattedTimestamp = timestamp ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '---'
-
-    const handleEditClick = () => setIsEditing(true)
-    const handleCancelClick = () => {
-        setEditedText(content)
-        setIsEditing(false)
-    }
-    const handleSaveClick = () => {
-        onEdit(id, editedText)
-        setIsEditing(false)
-    }
+    const formattedTimestamp = timestamp
+        ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        : '---'
 
     return (
         <div className={`flex ${sender === 'user' ? 'justify-end' : 'justify-start'} px-4`}>
             <div className={`p-4 max-w-[80%] rounded-lg shadow-md ${sender === 'user' ? 'bg-blue-100' : 'bg-gray-200'}`}>
-                {/* Contenu du message */}
+
+                {/* -------- CONTENU (texte ou édition) ---------- */}
                 <div className="whitespace-pre-wrap mb-2 space-y-2 flex-col">
-                    {/* Afficher le texte ou la zone d'édition */}
                     {isEditing ? (
                         <textarea
                             value={editedText}
@@ -57,53 +60,77 @@ const Message: React.FC<MessageProps> = ({ id, content, sender, timestamp, type 
                             rehypePlugins={[rehypeRaw]}
                             components={{
                                 a: ({ href, children }) => (
-                                    <a href={href} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">
+                                    <a
+                                        href={href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-blue-600 underline hover:text-blue-800"
+                                    >
                                         {children}
                                     </a>
-                                )
-                            }}>
+                                ),
+                            }}
+                        >
                             {content}
                         </ReactMarkdown>
                     )}
                 </div>
 
-                {/* Actions utilisateur */}
-                {!isEditing && sender === 'user' && (type === 'text' || (attachments?.length ?? 0) === 0) && (
+                {/* -------- ACTIONS USER (edit / delete) -------- */}
+                {!isEditing && sender === 'user' && (type === 'text' || attachments.length === 0) && (
                     <div className="flex justify-end gap-2 mt-3 pt-2 text-sm">
-                        {(attachments?.length ?? 0) === 0 && (
+                        {attachments.length === 0 && (
                             <button
-                                onClick={handleEditClick}
-                                className="flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition">
+                                onClick={() => setIsEditing(true)}
+                                className="flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
+                            >
                                 ✏️ Modifier
                             </button>
                         )}
                         <button
                             onClick={() => onDelete(id)}
-                            className="flex items-center gap-1 px-3 py-1 rounded-full bg-red-100 text-red-700 hover:bg-red-200 transition">
+                            className="flex items-center gap-1 px-3 py-1 rounded-full bg-red-100 text-red-700 hover:bg-red-200 transition"
+                        >
                             🗑️ Supprimer
                         </button>
                     </div>
                 )}
 
-                {/* Timestamp */}
+                {/* Horodatage */}
                 <span className="text-xs text-gray-500 block mt-1">{formattedTimestamp}</span>
 
-                {/* Actions en mode édition */}
+                {/* -------- ACTIONS EN MODE ÉDITION ---------- */}
                 {isEditing && (
                     <div className="flex gap-2 justify-end mt-2 pb-2">
-                        <button onClick={handleSaveClick} className="text-green-500 hover:text-green-700 text-sm">
+                        <button
+                            onClick={() => {
+                                onEdit(id, editedText)
+                                setIsEditing(false)
+                            }}
+                            className="text-green-500 hover:text-green-700 text-sm"
+                        >
                             Enregistrer
                         </button>
-                        <button onClick={handleCancelClick} className="text-red-500 hover:text-red-700 text-sm">
+                        <button
+                            onClick={() => {
+                                setEditedText(content)
+                                setIsEditing(false)
+                            }}
+                            className="text-red-500 hover:text-red-700 text-sm"
+                        >
                             Annuler
                         </button>
                     </div>
                 )}
-                {/* ➡️ Afficher les fichiers attachés s’il y en a */}
+
+                {/* -------- FICHIERS ATTACHÉS ---------- */}
                 {attachments.length > 0 && (
                     <div className="flex flex-col gap-2 pt-8">
                         {attachments.map((file) => (
-                            <AttachmentPreview key={file.openai_id} {...file} />
+                            <AttachmentPreview
+                                key={`${id}-${file.openai_id}`}   // ➜ clé unique (messageId+fileId)
+                                {...file}
+                            />
                         ))}
                     </div>
                 )}

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
-import { deleteFileMessage, readsFileMessages } from '../services/file_message'
+import { deleteMessage as deleteMessageAPI } from '../services/message/delete-message'
+import { readMessages } from '../services/message/read-messages'
 import { FileService } from '../services/OpenAi/fileService'
 import { ThreadService } from '../services/OpenAi/threadService'
 
@@ -9,97 +10,99 @@ import { Message } from '../models/message'
 export const useThreadMessages = () => {
     const [messages, setMessages] = useState<Message[]>([])
 
+    /* ------------------------------------------------------------------ */
+    /* Chargement                                                         */
+    /* ------------------------------------------------------------------ */
     const loadMessages = async (threadId: string) => {
-        const rawMessages = await ThreadService.getMessagesFromThread(threadId)
-        const fileLinks = await readsFileMessages(threadId)
+        const list = await readMessages(threadId)
 
-        // mapping des fichiers liés par messageId
-        const filesByMessageId: Record<string, Message['attachments']> = {}
-
-        for (const link of fileLinks) {
-            if (!link.file) continue;
-
-            filesByMessageId[link.message_openai_id] ??= []
-
-            filesByMessageId[link.message_openai_id]!.push({
-                openai_id: link.file.openai_id,
-                filename: link.file.filename,
-                size: link.file.size,
-                mime_type: link.file.mime_type
-            })
-        }
-
-        const formatted = rawMessages.map((msg: any) => ({
-            id: msg.id,
-            content: msg.content?.[0]?.text?.value ?? '[Contenu vide]',
-            sender: msg.role === 'user' ? 'user' : 'assistant',
-            timestamp: new Date(msg.created_at * 1000).toISOString(),
+        const formatted: Message[] = list.map((m: any) => ({
+            id:          m.openai_id,
+            content:     m.raw_text ?? '',
+            sender:      m.role === 'user' ? 'user' : 'assistant',
+            timestamp:   m.created_at,
             threadId,
-            attachments: filesByMessageId[msg.id] ?? []
-        })) as Message[]
+            attachments: (m.attachments ?? []).map((f: any) => ({
+                openai_id: f.file_openai_id,
+                filename:  f.filename,
+                size:      f.size,
+                mime_type: f.mime_type,
+            })),
+        }))
 
         setMessages(
-            formatted.sort((a, b) => {
-                const dateA = a.timestamp ? new Date(a.timestamp).getTime() : 0
-                const dateB = b.timestamp ? new Date(b.timestamp).getTime() : 0
-                return dateA - dateB
-            })
+            formatted.sort((a: Message, b: Message) => {
+                const dA = a.timestamp ? new Date(a.timestamp).getTime() : 0
+                const dB = b.timestamp ? new Date(b.timestamp).getTime() : 0
+                return dA - dB
+            }),
         )
     }
 
+    /* ------------------------------------------------------------------ */
+    /* Suppression                                                        */
+    /* ------------------------------------------------------------------ */
     const deleteMessage = async (threadId: string, messageId: string) => {
-        const index = messages.findIndex((msg) => msg.id === messageId)
-        if (index === -1) return
+        const startIndex = messages.findIndex(m => m.id === messageId)
+        if (startIndex === -1) return
 
-        const toDelete = messages.slice(index)
+        // ➜ on supprime le message ciblé + tous ceux qui le suivent (assistant)
+        const toDelete   = messages.slice(startIndex)
+        const ids        = toDelete.map(m => m.id)
 
-        // suppression côté OpenAI
-        await ThreadService.deleteMessagesFromThread(threadId, toDelete.map((msg) => msg.id))
+        /* 1) OpenAI */
+        await ThreadService.deleteMessagesFromThread(threadId, ids)
 
-        // suppression côté Laravel (liens + fichiers si plus utilisés)
-        await deleteFileMessage(messageId)
+        /* 2) Laravel : boucle sur chaque id */
+        for (const id of ids) {
+            try {
+                await deleteMessageAPI(id)
+            } catch {/* ignore */}
+        }
 
-        // suppression des fichiers dans OpenAI
+        /* 3) Fichiers OpenAI éventuels */
         for (const msg of toDelete) {
-            if (msg.attachments && msg.attachments.length > 0) {
-                for (const file of msg.attachments) {
+            for (const file of msg.attachments ?? []) {
+                try {
                     await FileService.delete(file.openai_id)
-                }
+                } catch {/* ignore */}
             }
         }
 
-        // suppression locale
-        setMessages((prev) => prev.filter((m) => !toDelete.map((x) => x.id).includes(m.id)))
+        /* 4) Mise à jour locale */
+        setMessages(prev => prev.filter(m => !ids.includes(m.id)))
     }
 
-    const editMessage = async (threadId: string, messageId: string, newContent: string) => {
-        // Optimistic update
+    /* ------------------------------------------------------------------ */
+    /* Édition (inchangé)                                                 */
+    /* ------------------------------------------------------------------ */
+    const editMessage = async (
+        threadId: string,
+        messageId: string,
+        newContent: string,
+    ) => {
         setMessages(prev =>
             prev.map(m =>
-                m.id === messageId
-                    ? { ...m, content: newContent, pending: true }
-                    : m
-            )
-        );
+                m.id === messageId ? { ...m, content: newContent, pending: true } : m,
+            ),
+        )
 
-        const res = await ThreadService.editMessage(threadId, messageId, newContent);
+        const res = await ThreadService.editMessage(threadId, messageId, newContent)
 
-        // Remplacement du message édité par celui retourné par l’API
         setMessages(prev =>
             prev.map(m =>
                 m.id === messageId
                     ? {
                         ...m,
-                        id: res.newMessage.id,
-                        content: newContent,
+                        id:        res.newMessage.id,
+                        content:   newContent,
                         timestamp: new Date(res.newMessage.created_at * 1000).toISOString(),
-                        pending: false,
+                        pending:   false,
                     }
-                    : m
-            )
-        );
+                    : m,
+            ),
+        )
     }
 
     return { messages, setMessages, loadMessages, deleteMessage, editMessage }
 }
-

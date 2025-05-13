@@ -9,4 +9,6 @@ export const HttpService = new HttpRequestBuilder(
 )
 
 export * from './create-message'
-export * from './read-message'
+export * from './delete-message'
+export * from './read-messages'
+

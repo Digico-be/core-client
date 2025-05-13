@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import { createFileMessage } from '../services/file_message'
+import { createMessage as saveMessage } from '../services/message/create-message'
+import { readMessages } from '../services/message/read-messages'
 import { ThreadService } from '../services/OpenAi/threadService'
 import { destroyThread } from '../services/thread'
 
@@ -24,15 +25,22 @@ export const useChatThread = (
     assistant?: Assistant,
 ) => {
     const [thread, setThread] = useState<Thread | null>(null)
-    const { messages, setMessages, deleteMessage, editMessage: baseEditMessage } = useThreadMessages()
-    const { streamedResponse, stream } = useStreamAssistantResponse(workspaceSlug, module)
+    const { messages, setMessages, deleteMessage, editMessage: baseEditMessage } =
+        useThreadMessages()
+    const { streamedResponse, stream } = useStreamAssistantResponse(
+        workspaceSlug,
+        module,
+    )
     const lastSeqRef = useRef(0)
 
+    /* ------------------------------------------------------------------ */
+    /* Chargement initial                                                 */
+    /* ------------------------------------------------------------------ */
     useEffect(() => {
         if (!initialThreadId) return
 
         const seq = ++lastSeqRef.current
-        const id = initialThreadId
+        const id  = initialThreadId
 
         setThread({ id, assistantId, module, createdAt: new Date().toISOString() })
         setMessages([])
@@ -40,24 +48,27 @@ export const useChatThread = (
 
         ;(async () => {
             try {
-                const raw = await ThreadService.getMessagesFromThread(id)
-                raw.sort((a: any, b: any) => a.created_at - b.created_at)
+                const list = await readMessages(id)
                 if (lastSeqRef.current !== seq) return
 
-                const parsed = raw.map(
+                const parsed = list.map(
                     (m: any): Message => ({
-                        id: m.id,
-                        sender: m.role === 'user' ? 'user' : 'assistant',
-                        content: m.content[0]?.text?.value ?? '',
-                        timestamp: new Date(m.created_at * 1000).toISOString(),
-                        threadId: id
-                    })
+                        id:          m.openai_id,
+                        sender:      m.role === 'user' ? 'user' : 'assistant',
+                        content:     m.raw_text ?? '',
+                        timestamp:   m.created_at,
+                        threadId:    id,
+                        attachments: m.attachments ?? [],
+                    }),
                 )
                 setMessages(parsed)
-            } catch {}
+            } catch (err) {
+                console.error('Erreur chargement messages:', err)
+            }
         })()
     }, [initialThreadId, assistantId, module, tabId, setMessages])
 
+    /* Reset si on change de thread dynamiquement */
     useEffect(() => {
         if (thread && !initialThreadId) {
             setThread(null)
@@ -65,6 +76,7 @@ export const useChatThread = (
         }
     }, [initialThreadId, thread, setMessages])
 
+    /* Helpers UI ------------------------------------------------------- */
     const addThinking = useCallback(
         (threadId: string) =>
             setMessages(prev => [
@@ -74,27 +86,46 @@ export const useChatThread = (
                     sender: 'assistant',
                     content: '🤖 L’assistant réfléchit...',
                     timestamp: new Date().toISOString(),
-                    threadId
-                }
+                    threadId,
+                },
             ]),
-        [setMessages]
+        [setMessages],
     )
 
     const removeThinking = useCallback(
         () => setMessages(prev => prev.filter(m => m.id !== 'thinking')),
-        [setMessages]
+        [setMessages],
     )
 
     const pushAssistantMessage = useCallback(
         (msg: Message) => setMessages(prev => [...prev, msg]),
-        [setMessages]
+        [setMessages],
     )
 
+    /* ------------------------------------------------------------
+     * NOUVEAU : wrapper qui push + sauvegarde côté Laravel
+     * ---------------------------------------------------------- */
+    const pushAndSaveAssistant = useCallback(
+        async (msg: Message) => {
+            pushAssistantMessage(msg)
+
+            // Sauvegarde dans messages si pas déjà là
+            await saveMessage({
+                openai_id:        msg.id,
+                thread_openai_id: thread!.id,
+                role:             'assistant',
+                raw_text:         msg.content,
+            })
+        },
+        [pushAssistantMessage, thread],
+    )
+
+    /* useAssistantRun utilisera pushAndSaveAssistant */
     const { runWithFiles } = useAssistantRun(
         assistantId,
         () => addThinking(thread!.id),
         removeThinking,
-        pushAssistantMessage
+        pushAndSaveAssistant,          // <-- remplacement
     )
 
     const removeThread = useCallback(
@@ -106,62 +137,77 @@ export const useChatThread = (
             SessionStorage.removeThreadIdForTab(tabId)
             setThread(null)
         },
-        [tabId]
+        [tabId],
     )
 
+    /* ------------------------------------------------------------------ */
+    /* Envoi d’un message (user)                                          */
+    /* ------------------------------------------------------------------ */
     const sendMessage = useCallback(
         async (
             input: string | ThreadMessageContent[],
             attachments?: IAFile[],
-            options: { skipUserMessage?: boolean } = {}
+            options: { skipUserMessage?: boolean } = {},
         ) => {
             if (!thread?.id) return
 
             const content: ThreadMessageContent[] =
                 typeof input === 'string' ? [{ type: 'text', text: input }] : input
 
-            const rawText = content.find((c): c is { type: 'text'; text: string } => c.type === 'text')?.text || ''
+            const rawText =
+                content.find((c): c is { type: 'text'; text: string } => c.type === 'text')
+                    ?.text || ''
+
             const enrichedText = buildContextualPrompt(assistant, rawText)
 
-            console.log('🧾 Message enrichi envoyé à OpenAI :\n', enrichedText)
-
-            const hasFile = !!attachments?.length
+            const hasFile       = !!attachments?.length
             const attachmentIds = attachments?.map(f => f.id) || []
 
+            /* 1) OpenAI */
             const userRes = await ThreadService.sendMessageToThread(
                 thread.id,
                 [{ type: 'text', text: enrichedText }],
                 'user',
-                attachmentIds
+                attachmentIds,
             )
 
+            /* 2) Laravel (message user) */
+            await saveMessage({
+                openai_id:        userRes.id,
+                thread_openai_id: thread.id,
+                role:             'user',
+                raw_text:         rawText,
+                attachments: attachments?.map(f => ({
+                    file_openai_id: f.id,
+                    filename:       f.filename,
+                    size:           f.size ?? 0,
+                    mime_type:      f.mimeType ?? 'application/octet-stream',
+                })),
+            })
+
+            /* 3) UI pour le user */
             if (!options.skipUserMessage) {
                 setMessages(prev => [
                     ...prev,
                     {
-                        id: userRes.id,
-                        sender: 'user',
-                        content: rawText,
+                        id:        userRes.id,
+                        sender:    'user',
+                        content:   rawText,
                         timestamp: new Date(userRes.created_at * 1000).toISOString(),
-                        threadId: thread.id,
+                        threadId:  thread.id,
                         attachments: attachments?.map(f => ({
                             openai_id: f.id,
-                            filename: f.filename,
-                            size: f.size ?? 0,
-                            mime_type: f.mimeType ?? 'application/octet-stream'
-                        }))
-                    }
+                            filename:  f.filename,
+                            size:      f.size ?? 0,
+                            mime_type: f.mimeType ?? 'application/octet-stream',
+                        })),
+                    },
                 ])
             }
 
+            /* Gestion fichiers */
             if (hasFile) {
-                for (const f of attachments!) {
-                    await createFileMessage({
-                        file_openai_id: f.id,
-                        message_openai_id: userRes.id,
-                        thread_openai_id: thread.id
-                    })
-                }
+                // runWithFiles va appeler pushAndSaveAssistant pour la réponse
                 await runWithFiles(thread.id)
             } else {
                 addThinking(thread.id)
@@ -170,14 +216,22 @@ export const useChatThread = (
                     const aRes = await ThreadService.sendMessageToThread(
                         thread.id,
                         [{ type: 'text', text: full }],
-                        'assistant'
+                        'assistant',
                     )
+
+                    await saveMessage({
+                        openai_id:        aRes.id,
+                        thread_openai_id: thread.id,
+                        role:             'assistant',
+                        raw_text:         full,
+                    })
+
                     pushAssistantMessage({
-                        id: aRes.id,
-                        sender: 'assistant',
-                        content: full,
+                        id:        aRes.id,
+                        sender:    'assistant',
+                        content:   full,
                         timestamp: new Date(aRes.created_at * 1000).toISOString(),
-                        threadId: thread.id
+                        threadId:  thread.id,
                     })
                 }
             }
@@ -190,55 +244,70 @@ export const useChatThread = (
             addThinking,
             removeThinking,
             pushAssistantMessage,
-            assistant
-        ]
+            pushAndSaveAssistant,
+            assistant,
+        ],
     )
 
+    /* ------------------------------------------------------------------ */
+    /* Édition (inchangé)                                                 */
+    /* ------------------------------------------------------------------ */
     const editMessage = useCallback(
         async (threadId: string, messageId: string, newContent: string) => {
-            console.log('🛠️ Début editMessage')
-
             const prevMessage = messages.find(m => m.id === messageId)
-            if (!prevMessage || !prevMessage.timestamp) {
-                console.warn('⚠️ Ancien message non trouvé ou sans timestamp:', messageId)
-                return
-            }
+            if (!prevMessage?.timestamp) return
 
             await baseEditMessage(threadId, messageId, newContent)
 
-            setMessages(prev => {
-                const toRemove = prev.filter(m => {
-                    const isAssistant = m.sender === 'assistant'
-                    const sameThread = m.threadId === prevMessage.threadId
-                    const afterEdit = m.timestamp && new Date(m.timestamp) > new Date(prevMessage.timestamp!)
-                    return isAssistant && sameThread && afterEdit
-                })
-
-                console.log('🧹 Messages assistant supprimés:', toRemove.map(m => m.id))
-
-                return prev.filter(m => !toRemove.includes(m))
-            })
+            setMessages(prev =>
+                prev.filter(
+                    m =>
+                        !(
+                            m.sender === 'assistant' &&
+                            m.threadId === prevMessage.threadId &&
+                            m.timestamp &&
+                            new Date(m.timestamp) > new Date(prevMessage.timestamp!)
+                        ),
+                ),
+            )
 
             addThinking(threadId)
             const enrichedText = buildContextualPrompt(assistant, newContent)
-            const full = await stream(enrichedText, removeThinking)
-
+            const full         = await stream(enrichedText, removeThinking)
             if (!thread?.id || !full.trim()) return
 
             const aRes = await ThreadService.sendMessageToThread(
                 thread.id,
                 [{ type: 'text', text: full }],
-                'assistant'
+                'assistant',
             )
+
+            await saveMessage({
+                openai_id:        aRes.id,
+                thread_openai_id: thread.id,
+                role:             'assistant',
+                raw_text:         full,
+            })
+
             pushAssistantMessage({
-                id: aRes.id,
-                sender: 'assistant',
-                content: full,
+                id:        aRes.id,
+                sender:    'assistant',
+                content:   full,
                 timestamp: new Date(aRes.created_at * 1000).toISOString(),
-                threadId: thread.id
+                threadId:  thread.id,
             })
         },
-        [thread, stream, baseEditMessage, addThinking, removeThinking, pushAssistantMessage, setMessages, messages, assistant]
+        [
+            thread,
+            stream,
+            baseEditMessage,
+            addThinking,
+            removeThinking,
+            pushAssistantMessage,
+            setMessages,
+            messages,
+            assistant,
+        ],
     )
 
     return {
@@ -248,6 +317,6 @@ export const useChatThread = (
         deleteMessage,
         editMessage,
         removeThread,
-        thread
+        thread,
     }
 }
