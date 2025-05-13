@@ -2,42 +2,29 @@ import { functionsDefinition } from '../functions/functionsDefinition'
 
 import { fetchLaravelData } from './fetchLaravelData'
 
-
-/**
- * Résout dynamiquement une fonction GPT à partir de sa définition et appelle Laravel
- */
 export const handleToolCall = async (
     functionName: string,
     rawArgs: string,
-    workspace: string
+    workspace: string,
 ): Promise<any> => {
-    const args = JSON.parse(rawArgs);
+    const args = JSON.parse(rawArgs ?? '{}')
+    const found = functionsDefinition.find(fn => fn.function.name === functionName)
+    if (!found) throw new Error(`Fonction "${functionName}" non trouvée.`)
 
-    console.debug("🔍 [handleToolCall] Appel de fonction :", functionName);
-    console.debug("📦 [handleToolCall] Arguments bruts :", args);
+    let endpoint = found.function.parameters?.properties?.endpoint?.default
+    if (!endpoint) throw new Error(`Aucun endpoint pour "${functionName}".`)
 
-    const found = functionsDefinition.find(
-        (fn) => fn.function.name === functionName
-    );
-
-    if (!found) {
-        throw new Error(`Fonction "${functionName}" non trouvée dans functionsDefinition.`);
-    }
-
-    let endpoint = found.function.parameters?.properties?.endpoint?.default;
-
-    if (!endpoint) {
-        throw new Error(`Aucun endpoint par défaut défini pour "${functionName}".`);
-    }
-
-    // Remplacer les {id} ou autres dans l'URL par les valeurs d’arguments
-    Object.entries(args).forEach(([key, value]) => {
-        if (typeof value === "string") {
-            endpoint = endpoint.replace(`{${key}}`, value);
+    Object.entries(args).forEach(([k, v]) => {
+        if (typeof v === 'string') {
+            endpoint = endpoint.replace(`{${k}}`, encodeURIComponent(v))
         }
-    });
+    })
 
-    console.debug("🔗 [handleToolCall] Endpoint final appelé :", endpoint);
+    const apiData = await fetchLaravelData(endpoint, workspace)
+    const link = found.function.pageLink?.(workspace, args)
 
-    return await fetchLaravelData(endpoint, workspace);
-};
+    return {
+        ...apiData,
+        ...(link ? { link } : {}),
+    }
+}

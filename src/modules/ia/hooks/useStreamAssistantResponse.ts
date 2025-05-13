@@ -6,11 +6,11 @@ export function useStreamAssistantResponse(workspaceSlug: string, module: string
     const [streamedResponse, setStreamedResponse] = useState('')
 
     const stream = useCallback(
-        async (prompt: string, onToken?: (tok: string) => void): Promise<string> => {
+        async (prompt: string, onToken?: (tok: string) => void): Promise<{ content: string, link: string }> => {
             setStreamedResponse('')
             let first = true
 
-            const full = await StreamService.startStreamingResponse(
+            const { content, link } = await StreamService.startStreamingResponse(
                 prompt,
                 tok => {
                     setStreamedResponse(prev => prev + tok)
@@ -18,11 +18,12 @@ export function useStreamAssistantResponse(workspaceSlug: string, module: string
                     if (first) first = false
                 },
                 workspaceSlug,
-                module // <-- Ajout ici
+                module
             )
 
             setStreamedResponse('')
-            return full
+            return { content, link }
+
         },
         [workspaceSlug, module]
     )

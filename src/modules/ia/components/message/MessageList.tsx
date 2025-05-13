@@ -17,6 +17,7 @@ interface MessageListProps {
             size: number
             mime_type: string
         }[]
+        link?: string
     }[]
     onDeleteMessage: (id: string) => void
     onEditMessage: (id: string, newContent: string) => void
@@ -34,6 +35,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, onDeleteMessage, on
                     timestamp={message.timestamp}
                     type={message.type}
                     attachments={message.attachments}
+                    link={message.link}
                     onDelete={onDeleteMessage}
                     onEdit={onEditMessage}
                 />

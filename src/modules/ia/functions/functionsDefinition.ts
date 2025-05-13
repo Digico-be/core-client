@@ -1,4 +1,3 @@
-import { getTenantUrl } from '@digico/utils'
 
 export const functionsDefinition = [
     {
@@ -28,16 +27,10 @@ export const functionsDefinition = [
                     },
                 },
             },
-            pageLink: (_workspace: string, args?: any): string => {
-                const baseUrl = getTenantUrl('/billing/invoice');
-                const params = new URLSearchParams();
+            pageLink: (workspace: string, args?: Record<string, any>) =>
+                `/${workspace}/billing/invoice` + (args?.contact_id ? `?contact_id=${args.contact_id}` : '')
 
-                if (args?.contact_id) params.append('contact_id', args.contact_id);
-                if (args?.status) params.append('status', args.status);
-                if (args?.date) params.append('date', args.date);
 
-                return params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
-            }
         }
     }
 

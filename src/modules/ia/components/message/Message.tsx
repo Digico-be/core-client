@@ -20,6 +20,7 @@ interface MessageProps {
     timestamp?: string | null
     type?: 'text' | 'file'
     attachments?: Attachment[]
+    link?: string
     onDelete: (id: string) => void
     onEdit: (id: string, newContent: string) => void
 }
@@ -31,6 +32,7 @@ const Message: React.FC<MessageProps> = ({
                                              timestamp,
                                              type = 'text',
                                              attachments = [],
+                                             link,
                                              onDelete,
                                              onEdit,
                                          }) => {
@@ -41,10 +43,13 @@ const Message: React.FC<MessageProps> = ({
         ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         : '---'
 
+    const displayContent = link
+        ? `${content}\n\n🔗 [Voir sur la plateforme](${link})`
+        : content
+
     return (
         <div className={`flex ${sender === 'user' ? 'justify-end' : 'justify-start'} px-4`}>
             <div className={`p-4 max-w-[80%] rounded-lg shadow-md ${sender === 'user' ? 'bg-blue-100' : 'bg-gray-200'}`}>
-
                 <div className="whitespace-pre-wrap mb-2 space-y-2 flex-col">
                     {isEditing ? (
                         <textarea
@@ -70,7 +75,7 @@ const Message: React.FC<MessageProps> = ({
                                 ),
                             }}
                         >
-                            {content}
+                            {displayContent}
                         </ReactMarkdown>
                     )}
                 </div>

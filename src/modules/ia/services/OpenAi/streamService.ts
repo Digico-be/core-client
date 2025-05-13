@@ -7,10 +7,11 @@ export const StreamService = {
         workspace: string,
         module: string,
         onFunctionCall?: (name: string, args: string) => void
-    ): Promise<string> => {
+    ): Promise<{ content: string; link: string }> => {
         const reader = await StreamApiHelper.streamMessageToAssistant(message, workspace, module);
         const decoder = new TextDecoder();
         let fullResponse = '';
+        let finalLink = ''
 
         while (true) {
             const { done, value } = await reader.read();
@@ -33,6 +34,8 @@ export const StreamService = {
                     if (parsed.type === "full") {
                         fullResponse += parsed.content;
                         onToken(parsed.content);
+                        if (parsed.link) finalLink = parsed.link
+
                     }
 
                     if (parsed.type === "tool_call" && onFunctionCall) {
@@ -45,6 +48,6 @@ export const StreamService = {
         }
 
 
-        return fullResponse;
+        return { content: fullResponse, link: finalLink };
     }
 };

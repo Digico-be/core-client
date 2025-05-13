@@ -33,12 +33,11 @@ export const useChatThread = (
     )
     const lastSeqRef = useRef(0)
 
-
     useEffect(() => {
         if (!initialThreadId) return
 
         const seq = ++lastSeqRef.current
-        const id  = initialThreadId
+        const id = initialThreadId
 
         setThread({ id, assistantId, module, createdAt: new Date().toISOString() })
         setMessages([])
@@ -51,11 +50,11 @@ export const useChatThread = (
 
                 const parsed = list.map(
                     (m: any): Message => ({
-                        id:          m.openai_id,
-                        sender:      m.role === 'user' ? 'user' : 'assistant',
-                        content:     m.raw_text ?? '',
-                        timestamp:   m.created_at,
-                        threadId:    id,
+                        id: m.openai_id,
+                        sender: m.role === 'user' ? 'user' : 'assistant',
+                        content: m.raw_text ?? '',
+                        timestamp: m.created_at,
+                        threadId: id,
                         attachments: m.attachments ?? [],
                     }),
                 )
@@ -66,7 +65,6 @@ export const useChatThread = (
         })()
     }, [initialThreadId, assistantId, module, tabId, setMessages])
 
-    /* Reset si on change de thread dynamiquement */
     useEffect(() => {
         if (thread && !initialThreadId) {
             setThread(null)
@@ -74,7 +72,6 @@ export const useChatThread = (
         }
     }, [initialThreadId, thread, setMessages])
 
-    /* Helpers UI ------------------------------------------------------- */
     const addThinking = useCallback(
         (threadId: string) =>
             setMessages(prev => [
@@ -100,16 +97,14 @@ export const useChatThread = (
         [setMessages],
     )
 
-
     const pushAndSaveAssistant = useCallback(
         async (msg: Message) => {
             pushAssistantMessage(msg)
-
             await saveMessage({
-                openai_id:        msg.id,
+                openai_id: msg.id,
                 thread_openai_id: thread!.id,
-                role:             'assistant',
-                raw_text:         msg.content,
+                role: 'assistant',
+                raw_text: msg.content,
             })
         },
         [pushAssistantMessage, thread],
@@ -146,15 +141,12 @@ export const useChatThread = (
                 typeof input === 'string' ? [{ type: 'text', text: input }] : input
 
             const rawText =
-                content.find((c): c is { type: 'text'; text: string } => c.type === 'text')
-                    ?.text || ''
+                content.find((c): c is { type: 'text'; text: string } => c.type === 'text')?.text || ''
 
             const enrichedText = buildContextualPrompt(assistant, rawText)
-
-            const hasFile       = !!attachments?.length
+            const hasFile = !!attachments?.length
             const attachmentIds = attachments?.map(f => f.id) || []
 
-            /* 1) OpenAI */
             const userRes = await ThreadService.sendMessageToThread(
                 thread.id,
                 [{ type: 'text', text: enrichedText }],
@@ -162,46 +154,43 @@ export const useChatThread = (
                 attachmentIds,
             )
 
-            /* 2) Laravel (message user) */
             await saveMessage({
-                openai_id:        userRes.id,
+                openai_id: userRes.id,
                 thread_openai_id: thread.id,
-                role:             'user',
-                raw_text:         rawText,
+                role: 'user',
+                raw_text: rawText,
                 attachments: attachments?.map(f => ({
                     file_openai_id: f.id,
-                    filename:       f.filename,
-                    size:           f.size ?? 0,
-                    mime_type:      f.mimeType ?? 'application/octet-stream',
+                    filename: f.filename,
+                    size: f.size ?? 0,
+                    mime_type: f.mimeType ?? 'application/octet-stream',
                 })),
             })
 
-            /* 3) UI pour le user */
             if (!options.skipUserMessage) {
                 setMessages(prev => [
                     ...prev,
                     {
-                        id:        userRes.id,
-                        sender:    'user',
-                        content:   rawText,
+                        id: userRes.id,
+                        sender: 'user',
+                        content: rawText,
                         timestamp: new Date(userRes.created_at * 1000).toISOString(),
-                        threadId:  thread.id,
+                        threadId: thread.id,
                         attachments: attachments?.map(f => ({
                             openai_id: f.id,
-                            filename:  f.filename,
-                            size:      f.size ?? 0,
+                            filename: f.filename,
+                            size: f.size ?? 0,
                             mime_type: f.mimeType ?? 'application/octet-stream',
                         })),
                     },
                 ])
             }
 
-            /* Gestion fichiers */
             if (hasFile) {
                 await runWithFiles(thread.id)
             } else {
                 addThinking(thread.id)
-                const full = await stream(enrichedText, removeThinking)
+                const { content: full, link } = await stream(enrichedText, removeThinking)
                 if (full.trim()) {
                     const aRes = await ThreadService.sendMessageToThread(
                         thread.id,
@@ -210,18 +199,19 @@ export const useChatThread = (
                     )
 
                     await saveMessage({
-                        openai_id:        aRes.id,
+                        openai_id: aRes.id,
                         thread_openai_id: thread.id,
-                        role:             'assistant',
-                        raw_text:         full,
+                        role: 'assistant',
+                        raw_text: link ? `${full}\n\n🔗 [Voir sur la plateforme](${link})` : full,
                     })
 
                     pushAssistantMessage({
-                        id:        aRes.id,
-                        sender:    'assistant',
-                        content:   full,
+                        id: aRes.id,
+                        sender: 'assistant',
+                        content: full,
                         timestamp: new Date(aRes.created_at * 1000).toISOString(),
-                        threadId:  thread.id,
+                        threadId: thread.id,
+                        ...(link ? { link } : {}),
                     })
                 }
             }
@@ -239,9 +229,6 @@ export const useChatThread = (
         ],
     )
 
-    /* ------------------------------------------------------------------ */
-    /* Édition (inchangé)                                                 */
-    /* ------------------------------------------------------------------ */
     const editMessage = useCallback(
         async (threadId: string, messageId: string, newContent: string) => {
             const prevMessage = messages.find(m => m.id === messageId)
@@ -263,7 +250,7 @@ export const useChatThread = (
 
             addThinking(threadId)
             const enrichedText = buildContextualPrompt(assistant, newContent)
-            const full         = await stream(enrichedText, removeThinking)
+            const { content: full } = await stream(enrichedText, removeThinking)
             if (!thread?.id || !full.trim()) return
 
             const aRes = await ThreadService.sendMessageToThread(
@@ -273,18 +260,18 @@ export const useChatThread = (
             )
 
             await saveMessage({
-                openai_id:        aRes.id,
+                openai_id: aRes.id,
                 thread_openai_id: thread.id,
-                role:             'assistant',
-                raw_text:         full,
+                role: 'assistant',
+                raw_text: full,
             })
 
             pushAssistantMessage({
-                id:        aRes.id,
-                sender:    'assistant',
-                content:   full,
+                id: aRes.id,
+                sender: 'assistant',
+                content: full,
                 timestamp: new Date(aRes.created_at * 1000).toISOString(),
-                threadId:  thread.id,
+                threadId: thread.id,
             })
         },
         [

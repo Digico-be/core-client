@@ -22,7 +22,10 @@ export const createLangChainAgent = async (workspace: string) => {
 
                 const result = await handleToolCall(fn.function.name, JSON.stringify(args), workspace);
 
-                return JSON.stringify(result.items?.data ?? result);
+                return JSON.stringify({
+                    data: result.items?.data ?? result.data ?? [],
+                    link: result.link,
+                });
             },
         });
     });
