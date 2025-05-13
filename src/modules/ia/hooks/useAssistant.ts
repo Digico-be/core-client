@@ -78,8 +78,6 @@ export const useAssistant = (
                 ...template,
             });
 
-            console.log('📦 Assistant enregistré côté Laravel :', saved);
-
             SessionStorage.setAssistantOpenAiIdForTab(tabId, saved.openai_id);
             SessionStorage.setAssistantCreatedForTab(tabId);
             if (forceNew) SessionStorage.clearForceNewAssistant(tabId);

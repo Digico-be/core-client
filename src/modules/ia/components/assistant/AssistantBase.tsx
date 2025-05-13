@@ -37,7 +37,8 @@ const AssistantBase: React.FC<Props> = ({ module, tabId, type }) => {
         assistant?.openai_id ?? '',
         module,
         tenant?.name ?? '',
-        initialThreadId
+        initialThreadId,
+        assistant
     )
 
     useEffect(() => {

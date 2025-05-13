@@ -16,30 +16,19 @@ const AssistantWindow: React.FC = () => {
 
     const parts = pathname?.split('/') || [];
     const moduleFromPath = parts[2] || ''; // /tenant/<module>/...
-    console.log('🔍 Pathname:', pathname);
-    console.log('🔍 Module détecté depuis URL:', moduleFromPath);
 
     const excludedPaths = ['/codevo', '/codevo/ia'];
     const isExcluded = excludedPaths.includes(pathname);
-    console.log('🚫 Est-ce une page exclue ? =>', isExcluded);
 
     const isRadar = moduleFromPath === 'radar';
     const isSpecializedModule = Object.keys(assistantTemplates.specialized.modules ?? {}).includes(moduleFromPath);
     const isValid = !isExcluded && (isRadar || isSpecializedModule);
-    console.log('🧠 Est Radar ?', isRadar);
-    console.log('🧠 Est un module spécialisé reconnu ?', isSpecializedModule);
-    console.log('✅ Est-ce une page valide pour un assistant ?', isValid);
 
     const type = isRadar ? 'radar' : 'specialized';
     const tabId = `floating-window-${moduleFromPath}`;
     const moduleName = moduleFromPath;
 
-    console.log('📌 type:', type);
-    console.log('📌 moduleName:', moduleName);
-    console.log('📌 tabId:', tabId);
-
     const { data: assistant } = useAssistant(moduleName, tabId, type);
-    console.log('🎯 Assistant retourné:', assistant?.name);
 
     if (!isValid) return null;
 

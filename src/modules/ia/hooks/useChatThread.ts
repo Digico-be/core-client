@@ -4,6 +4,7 @@ import { createFileMessage } from '../services/file_message'
 import { ThreadService } from '../services/OpenAi/threadService'
 import { destroyThread } from '../services/thread'
 
+import { Assistant } from '../models/assistant'
 import { IAFile } from '../models/file'
 import { Message } from '../models/message'
 import { Thread, ThreadMessageContent } from '../models/thread'
@@ -18,7 +19,8 @@ export const useChatThread = (
     assistantId: string,
     module: string,
     workspaceSlug: string,
-    initialThreadId?: string
+    initialThreadId?: string,
+    assistant?: Assistant,
 ) => {
     const [thread, setThread] = useState<Thread | null>(null)
     const { messages, setMessages, deleteMessage, editMessage: baseEditMessage } = useThreadMessages()
@@ -117,13 +119,39 @@ export const useChatThread = (
             const content: ThreadMessageContent[] =
                 typeof input === 'string' ? [{ type: 'text', text: input }] : input
 
-            const promptText =
-                content.find((c): c is { type: 'text'; text: string } => c.type === 'text')?.text || ''
+            const rawText = content.find((c): c is { type: 'text'; text: string } => c.type === 'text')?.text || ''
+
+            // 🧩 Construire le message enrichi pour OpenAI
+            const rulesFormatted = Array.isArray(assistant?.rules)
+                ? assistant.rules
+                : typeof assistant?.rules === 'string'
+                    ? [assistant.rules]
+                    : []
+
+            const metadataFormatted = assistant?.metadata
+                ? Object.entries(assistant.metadata).map(([k, v]) => `- ${k}: ${v}`).join('\n')
+                : ''
+
+            const enrichedText = [
+                assistant?.persona ? `👤 Persona : ${assistant.persona}` : '',
+                assistant?.instructions ? `🧠 Instructions : ${assistant.instructions}` : '',
+                rulesFormatted.length ? `📜 Règles :\n- ${rulesFormatted.join('\n- ')}` : '',
+                metadataFormatted ? `📌 Métadonnées :\n${metadataFormatted}` : '',
+                '',
+                rawText
+            ].filter(Boolean).join('\n\n')
+
+            console.log('🧾 Message enrichi envoyé à OpenAI :\n', enrichedText)
 
             const hasFile = !!attachments?.length
             const attachmentIds = attachments?.map(f => f.id) || []
 
-            const userRes = await ThreadService.sendMessageToThread(thread.id, content, 'user', attachmentIds)
+            const userRes = await ThreadService.sendMessageToThread(
+                thread.id,
+                [{ type: 'text', text: enrichedText }],
+                'user',
+                attachmentIds
+            )
 
             if (!options.skipUserMessage) {
                 setMessages(prev => [
@@ -131,7 +159,7 @@ export const useChatThread = (
                     {
                         id: userRes.id,
                         sender: 'user',
-                        content: promptText,
+                        content: rawText, // ✅ n'affiche que le message original
                         timestamp: new Date(userRes.created_at * 1000).toISOString(),
                         threadId: thread.id,
                         attachments: attachments?.map(f => ({
@@ -152,13 +180,10 @@ export const useChatThread = (
                         thread_openai_id: thread.id
                     })
                 }
-            }
-
-            if (hasFile) {
                 await runWithFiles(thread.id)
             } else {
                 addThinking(thread.id)
-                const full = await stream(promptText, removeThinking)
+                const full = await stream(enrichedText, removeThinking)
                 if (full.trim()) {
                     const aRes = await ThreadService.sendMessageToThread(
                         thread.id,
@@ -182,14 +207,14 @@ export const useChatThread = (
             setMessages,
             addThinking,
             removeThinking,
-            pushAssistantMessage
+            pushAssistantMessage,
+            assistant
         ]
     )
 
     const editMessage = useCallback(
         async (threadId: string, messageId: string, newContent: string) => {
             console.log('🛠️ Début editMessage')
-            console.log('🧠 Recherche du message édité:', messageId)
 
             const prevMessage = messages.find(m => m.id === messageId)
             if (!prevMessage || !prevMessage.timestamp) {
@@ -211,7 +236,6 @@ export const useChatThread = (
 
                 return prev.filter(m => !toRemove.includes(m))
             })
-
 
             addThinking(threadId)
             const full = await stream(newContent, removeThinking)
