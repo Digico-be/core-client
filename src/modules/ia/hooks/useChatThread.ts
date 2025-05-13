@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+import { readMessages } from '../services/message'
 import { createMessage as saveMessage } from '../services/message/create-message'
-import { readMessages } from '../services/message/read-messages'
 import { ThreadService } from '../services/OpenAi/threadService'
 import { destroyThread } from '../services/thread'
 
@@ -33,9 +33,7 @@ export const useChatThread = (
     )
     const lastSeqRef = useRef(0)
 
-    /* ------------------------------------------------------------------ */
-    /* Chargement initial                                                 */
-    /* ------------------------------------------------------------------ */
+
     useEffect(() => {
         if (!initialThreadId) return
 
@@ -102,14 +100,11 @@ export const useChatThread = (
         [setMessages],
     )
 
-    /* ------------------------------------------------------------
-     * NOUVEAU : wrapper qui push + sauvegarde côté Laravel
-     * ---------------------------------------------------------- */
+
     const pushAndSaveAssistant = useCallback(
         async (msg: Message) => {
             pushAssistantMessage(msg)
 
-            // Sauvegarde dans messages si pas déjà là
             await saveMessage({
                 openai_id:        msg.id,
                 thread_openai_id: thread!.id,
@@ -120,12 +115,11 @@ export const useChatThread = (
         [pushAssistantMessage, thread],
     )
 
-    /* useAssistantRun utilisera pushAndSaveAssistant */
     const { runWithFiles } = useAssistantRun(
         assistantId,
         () => addThinking(thread!.id),
         removeThinking,
-        pushAndSaveAssistant,          // <-- remplacement
+        pushAndSaveAssistant,
     )
 
     const removeThread = useCallback(
@@ -140,9 +134,6 @@ export const useChatThread = (
         [tabId],
     )
 
-    /* ------------------------------------------------------------------ */
-    /* Envoi d’un message (user)                                          */
-    /* ------------------------------------------------------------------ */
     const sendMessage = useCallback(
         async (
             input: string | ThreadMessageContent[],
@@ -207,7 +198,6 @@ export const useChatThread = (
 
             /* Gestion fichiers */
             if (hasFile) {
-                // runWithFiles va appeler pushAndSaveAssistant pour la réponse
                 await runWithFiles(thread.id)
             } else {
                 addThinking(thread.id)

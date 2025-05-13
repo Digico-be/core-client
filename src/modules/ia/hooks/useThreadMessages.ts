@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
+import { readMessages } from '../services/message'
 import { deleteMessage as deleteMessageAPI } from '../services/message/delete-message'
-import { readMessages } from '../services/message/read-messages'
 import { FileService } from '../services/OpenAi/fileService'
 import { ThreadService } from '../services/OpenAi/threadService'
 
@@ -10,9 +10,6 @@ import { Message } from '../models/message'
 export const useThreadMessages = () => {
     const [messages, setMessages] = useState<Message[]>([])
 
-    /* ------------------------------------------------------------------ */
-    /* Chargement                                                         */
-    /* ------------------------------------------------------------------ */
     const loadMessages = async (threadId: string) => {
         const list = await readMessages(threadId)
 
@@ -39,9 +36,6 @@ export const useThreadMessages = () => {
         )
     }
 
-    /* ------------------------------------------------------------------ */
-    /* Suppression                                                        */
-    /* ------------------------------------------------------------------ */
     const deleteMessage = async (threadId: string, messageId: string) => {
         const startIndex = messages.findIndex(m => m.id === messageId)
         if (startIndex === -1) return

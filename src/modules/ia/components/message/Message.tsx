@@ -45,7 +45,6 @@ const Message: React.FC<MessageProps> = ({
         <div className={`flex ${sender === 'user' ? 'justify-end' : 'justify-start'} px-4`}>
             <div className={`p-4 max-w-[80%] rounded-lg shadow-md ${sender === 'user' ? 'bg-blue-100' : 'bg-gray-200'}`}>
 
-                {/* -------- CONTENU (texte ou édition) ---------- */}
                 <div className="whitespace-pre-wrap mb-2 space-y-2 flex-col">
                     {isEditing ? (
                         <textarea
@@ -76,7 +75,6 @@ const Message: React.FC<MessageProps> = ({
                     )}
                 </div>
 
-                {/* -------- ACTIONS USER (edit / delete) -------- */}
                 {!isEditing && sender === 'user' && (type === 'text' || attachments.length === 0) && (
                     <div className="flex justify-end gap-2 mt-3 pt-2 text-sm">
                         {attachments.length === 0 && (
@@ -96,10 +94,8 @@ const Message: React.FC<MessageProps> = ({
                     </div>
                 )}
 
-                {/* Horodatage */}
                 <span className="text-xs text-gray-500 block mt-1">{formattedTimestamp}</span>
 
-                {/* -------- ACTIONS EN MODE ÉDITION ---------- */}
                 {isEditing && (
                     <div className="flex gap-2 justify-end mt-2 pb-2">
                         <button
@@ -123,12 +119,11 @@ const Message: React.FC<MessageProps> = ({
                     </div>
                 )}
 
-                {/* -------- FICHIERS ATTACHÉS ---------- */}
                 {attachments.length > 0 && (
                     <div className="flex flex-col gap-2 pt-8">
                         {attachments.map((file) => (
                             <AttachmentPreview
-                                key={`${id}-${file.openai_id}`}   // ➜ clé unique (messageId+fileId)
+                                key={`${id}-${file.openai_id}`}
                                 {...file}
                             />
                         ))}
