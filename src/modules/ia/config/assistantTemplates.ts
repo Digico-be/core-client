@@ -96,20 +96,9 @@ Si la question sort du périmètre, redirige l’utilisateur vers l’assistant 
                 instructions: `Tu aides l’utilisateur à gérer sa facturation (création de factures, rappels, TVA…)
 en suivant la législation belge et la documentation Digico Billing.`,
             },
-
-            /* ===== Module HR ===== */
-            hr: {
-                name: 'Assistant RH',
-                tabName: 'RH',
-                module: 'hr',
-                persona: 'Spécialiste RH',
-                instructions: `Tu conseilles sur la gestion du personnel (congés, contrats, paie…)
-selon le droit du travail belge.`,
-            },
-
             /* ===== Module Contact / Support ===== */
             contact: {
-                name: 'Assistant Support Client',
+                name: 'Assistant Client',
                 tabName: 'Support',
                 module: 'contact',
                 model: 'gpt-3.5-turbo-0125',

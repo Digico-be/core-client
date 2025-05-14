@@ -62,7 +62,7 @@ export const UpdateAssistantForm = () => {
             ...values,
             rules: values.rules.map((r) => r.value).filter(Boolean),
             suggested_prompts: values.suggested_prompts.map((p) => p.value).filter(Boolean),
-            tools: [{ type: 'file_search' }, ...functionsDefinition], // ← Optionnel ici
+            tools: [{ type: 'file_search' }, ...functionsDefinition],
         }
 
         updateAssistant.mutate(

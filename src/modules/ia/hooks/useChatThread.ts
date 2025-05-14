@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+import { readAssistant as getAssistantFromLaravel } from '../services/assistant'
 import { readMessages } from '../services/message'
 import { createMessage as saveMessage } from '../services/message/create-message'
 import { ThreadService } from '../services/OpenAi/threadService'
@@ -143,7 +144,15 @@ export const useChatThread = (
             const rawText =
                 content.find((c): c is { type: 'text'; text: string } => c.type === 'text')?.text || ''
 
-            const enrichedText = buildContextualPrompt(assistant, rawText)
+            const response = await getAssistantFromLaravel(assistantId)
+            console.log('🔍 Réponse brute de Laravel:', response)
+
+            const updatedAssistant = await getAssistantFromLaravel(assistantId)
+            console.log('✅ Assistant récupéré depuis Laravel:', updatedAssistant)
+
+            const enrichedText = buildContextualPrompt(updatedAssistant, rawText)
+
+
             const hasFile = !!attachments?.length
             const attachmentIds = attachments?.map(f => f.id) || []
 

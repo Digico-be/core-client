@@ -91,7 +91,7 @@ export class AssistantService {
      * @param data
      */
     static async updateAssistant(id: string, data: Partial<Assistant>) {
-        // 🧹 nettoie avant l’appel fetch
+        // nettoie avant l’appel fetch
         const allowed = ['name','description','instructions','model','tools','file_ids','metadata'] as const;
         const payload = clean(data, allowed);
         return patchAssistantOpenAI(id, payload);
