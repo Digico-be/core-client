@@ -43,11 +43,12 @@ export const AssistantFields = () => {
   const { fields: ruleFields, append: appendRule, remove: removeRule } =
     useFieldArray({ control: form.control, name: 'rules' })
 
-  const {
-    fields: promptFields,
-    append: appendPrompt,
-    remove: removePrompt,
-  } = useFieldArray({ control: form.control, name: 'suggested_prompts' })
+// const {
+//   fields: promptFields,
+//   append: appendPrompt,
+//   remove: removePrompt,
+// } = useFieldArray({ control: form.control, name: 'suggested_prompts' })
+
 /*
   const usageOptions = [
     { value: 'general', label: 'Général' },
@@ -260,8 +261,8 @@ export const AssistantFields = () => {
           </button>
         </Form.Row>
       </Form.Group>
-
       {/* Prompts suggérés dynamiques */}
+        {/*
       <Form.Group title="Prompts suggérés">
         <label
           htmlFor="prompt-0"
@@ -301,7 +302,9 @@ export const AssistantFields = () => {
             Ajouter une suggestion
           </button>
         </Form.Row>
+
       </Form.Group>
+              */}
     </>
   )
 }

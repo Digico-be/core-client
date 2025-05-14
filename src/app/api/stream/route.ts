@@ -14,6 +14,7 @@ export async function POST(req: Request) {
                 model: assistant?.model ?? 'gpt-4.1',
                 tools: [{ type: 'web_search_preview' }],
                 input: message,
+                temperature: assistant?.temperature ?? 0.7,
             })
 
             // Création du flux pour retourner la réponse à l’utilisateur
