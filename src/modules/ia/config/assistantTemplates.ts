@@ -14,7 +14,7 @@ const baseDefaults: AssistantTemplate = {
     description: '',
     module: '',
     instructions: '',
-    model: 'gpt-4o-2024-08-06',
+    model: 'gpt-4.1-2025-04-14',
     tools: [{ type: 'file_search' }],
     file_ids: [],
     metadata: {},

@@ -1,4 +1,5 @@
 import { StreamApiHelper } from '../../helpers/api/streamApiHelper'
+import { Assistant } from '../../models/assistant'
 
 export const StreamService = {
     startStreamingResponse: async (
@@ -6,9 +7,10 @@ export const StreamService = {
         onToken: (token: string) => void,
         workspace: string,
         module: string,
-        onFunctionCall?: (name: string, args: string) => void
+        onFunctionCall?: (name: string, args: string) => void,
+        assistant?: Assistant
     ): Promise<{ content: string; link: string }> => {
-        const reader = await StreamApiHelper.streamMessageToAssistant(message, workspace, module);
+        const reader = await StreamApiHelper.streamMessageToAssistant(message, workspace, module, assistant);
         const decoder = new TextDecoder();
         let fullResponse = '';
         let finalLink = ''

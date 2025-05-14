@@ -5,7 +5,6 @@ import { useFieldArray, useFormContext } from 'react-hook-form'
 import { AiOutlineInfoCircle } from 'react-icons/ai'
 import { Tooltip } from 'react-tooltip'
 import { Form } from '@digico/ui'
-import { toast } from 'sonner'
 
 import { Icon } from '@components/Icon'
 
@@ -49,7 +48,7 @@ export const AssistantFields = () => {
     append: appendPrompt,
     remove: removePrompt,
   } = useFieldArray({ control: form.control, name: 'suggested_prompts' })
-
+/*
   const usageOptions = [
     { value: 'general', label: 'Général' },
     { value: 'specialized', label: 'Spécialisé' },
@@ -61,7 +60,7 @@ export const AssistantFields = () => {
     { value: 'hr', label: 'Ressources humaines' },
     { value: 'contact', label: 'Support client' },
     { value: 'team', label: 'Gestion d’équipe' },
-  ]
+  ]*/
 
   const modelOptions = [
     { value: 'gpt-4o-2024-08-06', label: 'GPT-4o' },
@@ -87,7 +86,7 @@ export const AssistantFields = () => {
             label="Nom de l’assistant"
             placeholder="Assistant de facturation"
           />
-
+            {/*
           <div className="w-full flex flex-col gap-2">
             <label htmlFor="type" className="text-sm font-semibold text-gray-700">
               Usage
@@ -97,8 +96,8 @@ export const AssistantFields = () => {
               />
             </label>
             <Form.Select name="type" options={usageOptions} />
-          </div>
-
+          </div>*/}
+            {/*
           <div className="w-full flex flex-col gap-2">
             <label htmlFor="module" className="text-sm font-semibold text-gray-700">
               Domaine spécifique
@@ -123,7 +122,7 @@ export const AssistantFields = () => {
                 form.setValue('module', selectedValue)
               }}
             />
-          </div>
+          </div>*/}
         </Form.Row>
 
         {/* 🆕 Description */}

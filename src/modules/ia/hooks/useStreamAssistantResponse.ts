@@ -2,11 +2,13 @@ import { useCallback, useState } from 'react'
 
 import { StreamService } from '../services/OpenAi/streamService'
 
+import { Assistant } from '../models/assistant'
+
 export function useStreamAssistantResponse(workspaceSlug: string, module: string) {
     const [streamedResponse, setStreamedResponse] = useState('')
 
     const stream = useCallback(
-        async (prompt: string, onToken?: (tok: string) => void): Promise<{ content: string, link: string }> => {
+        async (prompt: string, onToken?: (tok: string) => void, assistant?: Assistant): Promise<{ content: string, link: string }> => {
             setStreamedResponse('')
             let first = true
 
@@ -18,7 +20,9 @@ export function useStreamAssistantResponse(workspaceSlug: string, module: string
                     if (first) first = false
                 },
                 workspaceSlug,
-                module
+                module,
+                undefined, // onFunctionCall
+                assistant
             )
 
             setStreamedResponse('')

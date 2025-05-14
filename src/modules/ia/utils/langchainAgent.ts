@@ -4,10 +4,11 @@ import { initializeAgentExecutorWithOptions } from "langchain/agents";
 
 import { functionsDefinition } from '../functions/functionsDefinition'
 import { handleToolCall } from '../helpers/toolHandler'
+import { Assistant } from '../models/assistant'
 
-export const createLangChainAgent = async (workspace: string) => {
+export const createLangChainAgent = async (workspace: string, assistant?: Assistant) => {
     const model = new ChatOpenAI({
-        modelName: "gpt-4",
+        modelName: assistant?.model ?? "gpt-4",
         temperature: 0,
         streaming: false,
     });

@@ -144,9 +144,6 @@ export const useChatThread = (
             const rawText =
                 content.find((c): c is { type: 'text'; text: string } => c.type === 'text')?.text || ''
 
-            const response = await getAssistantFromLaravel(assistantId)
-            console.log('🔍 Réponse brute de Laravel:', response)
-
             const updatedAssistant = await getAssistantFromLaravel(assistantId)
             console.log('✅ Assistant récupéré depuis Laravel:', updatedAssistant)
 
@@ -199,7 +196,7 @@ export const useChatThread = (
                 await runWithFiles(thread.id)
             } else {
                 addThinking(thread.id)
-                const { content: full, link } = await stream(enrichedText, removeThinking)
+                const { content: full, link } = await stream(enrichedText, removeThinking, updatedAssistant)
                 if (full.trim()) {
                     const aRes = await ThreadService.sendMessageToThread(
                         thread.id,

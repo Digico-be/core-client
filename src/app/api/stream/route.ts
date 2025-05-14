@@ -5,13 +5,13 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 const { createLangChainAgent } = await import('../../../modules/ia/utils/langchainAgent')
 
 export async function POST(req: Request) {
-    const { message, workspace, module } = await req.json() // On reçoit aussi `module`
+    const { message, workspace, module, assistant } = await req.json()
 
     try {
-        // 🟢 CAS SPÉCIAL RADAR : utilisation de web_search_preview
+        // RADAR : utilisation de web_search_preview
         if (module === 'radar') {
             const response = await openai.responses.create({
-                model: 'gpt-4.1',
+                model: assistant?.model ?? 'gpt-4.1',
                 tools: [{ type: 'web_search_preview' }],
                 input: message,
             })
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
             })
         }
 
-        const agent = await createLangChainAgent(workspace)
+        const agent = await createLangChainAgent(workspace, assistant)
         const result = await agent.invoke({ input: message })
 
         const stream = new ReadableStream({
