@@ -23,8 +23,8 @@ export const handleToolCall = async (
     const apiData = await fetchLaravelData(endpoint, workspace)
     const link = found.function.pageLink?.(workspace, args)
 
-    return {
-        ...apiData,
-        ...(link ? { link } : {}),
-    }
+    const content = `${JSON.stringify(apiData, null, 2)}${link ? `\n\n🔗 [Voir sur la plateforme](${link})` : ''}`
+
+
+    return { content }
 }

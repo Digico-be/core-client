@@ -1,6 +1,6 @@
-import { DynamicStructuredTool } from "@langchain/core/tools";
-import { ChatOpenAI } from "@langchain/openai";
-import { initializeAgentExecutorWithOptions } from "langchain/agents";
+import { DynamicStructuredTool } from '@langchain/core/tools'
+import { ChatOpenAI } from '@langchain/openai'
+import { initializeAgentExecutorWithOptions } from 'langchain/agents'
 
 import { functionsDefinition } from '../functions/functionsDefinition'
 import { handleToolCall } from '../helpers/toolHandler'
@@ -8,10 +8,10 @@ import { Assistant } from '../models/assistant'
 
 export const createLangChainAgent = async (workspace: string, assistant?: Assistant) => {
     const model = new ChatOpenAI({
-        modelName: assistant?.model ?? "gpt-4",
+        modelName: assistant?.model ?? 'gpt-4',
         temperature: 0,
-        streaming: false,
-    });
+        streaming: false
+    })
 
     const tools = functionsDefinition.map((fn) => {
         return new DynamicStructuredTool({
@@ -19,25 +19,23 @@ export const createLangChainAgent = async (workspace: string, assistant?: Assist
             description: fn.function.description,
             schema: fn.function.parameters as any,
             func: async (args) => {
-                console.debug('🛠️ [LangChainAgent] Fonction GPT appelée :', fn.function.name, args);
+                const result = await handleToolCall(fn.function.name, JSON.stringify(args), workspace)
 
-                const result = await handleToolCall(fn.function.name, JSON.stringify(args), workspace);
-
-                return JSON.stringify({
-                    data: result.items?.data ?? result.data ?? [],
-                    link: result.link,
-                });
-            },
-        });
-    });
+                return result.content
+            }
+        })
+    })
 
     const executor = await initializeAgentExecutorWithOptions(tools as any, model, {
-        agentType: "openai-functions" as any,
+        agentType: 'openai-functions' as any,
         verbose: true,
         agentArgs: {
-            systemMessage: "Tu es un assistant DIJI. Planifie les actions nécessaires et appelle les fonctions via LangChain.",
-        },
-    });
+            systemMessage: `Tu es un assistant DIJI. Tu dois afficher les données EXACTEMENT comme elles te sont fournies par les outils.
 
-    return executor;
-};
+N’ajoute pas d’introduction ou de reformulation. Si le contenu contient un lien Markdown, affiche-le tel quel, sans le paraphraser.`,
+
+        }
+    })
+
+    return executor
+}
