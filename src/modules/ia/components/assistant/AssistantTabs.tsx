@@ -152,7 +152,7 @@ const AssistantTabs: React.FC<AssistantTabsProps> = ({ type }) => {
 
     return (
         <>
-            <div className="flex items-center bg-white mb-2">
+            <div className="flex items-center bg-white mb-2 p-2 rounded">
                 {canScrollLeft && (
                     <button
                         onMouseDown={() => startContinuousScroll('left')}
@@ -203,7 +203,7 @@ const AssistantTabs: React.FC<AssistantTabsProps> = ({ type }) => {
                                         prevActiveTabId.current = activeTabId
                                     }
                                 }}
-                                className={`px-4 py-4 rounded-t-lg cursor-pointer whitespace-nowrap ${
+                                className={`shadow px-4 py-4 rounded cursor-pointer whitespace-nowrap ${
                                     tab.id === activeTabId ? 'bg-white font-bold' : 'bg-gray-400'
                                 }`}
                                 onClick={() => setActiveTabId(tab.id)}
@@ -269,7 +269,7 @@ const AssistantTabs: React.FC<AssistantTabsProps> = ({ type }) => {
                             setActiveTabId(id)
                         }}
                     />
-                    <button onClick={() => router.push('/ia/setting')} className="bg-primary text-white px-4 py-2 rounded text-sm">
+                    <button onClick={() => router.push('/ia/setting')} className="bg-primary text-white px-4 py-3 rounded-full text-sm">
                         Voir les réglages
                     </button>
                 </div>

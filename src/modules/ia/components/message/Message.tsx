@@ -4,6 +4,8 @@ import React, { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import rehypeRaw from 'rehype-raw'
 
+import { Icon } from '@components/Icon'
+
 import AttachmentPreview from '../file/AttachmentPreview'
 
 interface Attachment {
@@ -30,23 +32,11 @@ function isRawGPTTable(content: string): boolean {
     return content.includes('|') && content.includes('---') && content.includes('\n')
 }
 
-const Message: React.FC<MessageProps> = ({
-                                             id,
-                                             content,
-                                             sender,
-                                             timestamp,
-                                             type = 'text',
-                                             attachments = [],
-                                             link,
-                                             onDelete,
-                                             onEdit
-                                         }) => {
+const Message: React.FC<MessageProps> = ({ id, content, sender, timestamp, type = 'text', attachments = [], link, onDelete, onEdit }) => {
     const [isEditing, setIsEditing] = useState(false)
     const [editedText, setEditedText] = useState(content)
 
-    const formattedTimestamp = timestamp
-        ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        : '---'
+    const formattedTimestamp = timestamp ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '---'
 
     const displayContent = link ? `${content}\n\n🔗 [Voir sur la plateforme](${link})` : content
 
@@ -57,8 +47,7 @@ const Message: React.FC<MessageProps> = ({
             <div
                 className={`p-4 ${isTable ? 'w-full max-w-full' : 'max-w-[80%] md:max-w-[900px]'} rounded-lg shadow-md ${
                     sender === 'user' ? 'bg-blue-100' : 'bg-gray-200'
-                }`}
-            >
+                }`}>
                 <div className="whitespace-pre-wrap mb-2 space-y-2 flex-col">
                     {isEditing ? (
                         <textarea
@@ -70,28 +59,20 @@ const Message: React.FC<MessageProps> = ({
                         />
                     ) : isTable ? (
                         <div className="max-w-full overflow-hidden">
-  <pre className="overflow-x-auto font-mono text-sm whitespace-pre bg-white p-4 rounded border border-gray-300 max-w-full">
-    {displayContent}
-  </pre>
+                            <pre className="overflow-x-auto font-mono text-sm whitespace-pre bg-white p-4 rounded border border-gray-300 max-w-full">
+                                {displayContent}
+                            </pre>
                         </div>
-
-
                     ) : (
                         <ReactMarkdown
                             rehypePlugins={[rehypeRaw]}
                             components={{
                                 a: ({ href, children }) => (
-                                    <a
-                                        href={href}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-blue-600 underline hover:text-blue-800"
-                                    >
+                                    <a href={href} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">
                                         {children}
                                     </a>
-                                ),
-                            }}
-                        >
+                                )
+                            }}>
                             {displayContent}
                         </ReactMarkdown>
                     )}
@@ -102,16 +83,18 @@ const Message: React.FC<MessageProps> = ({
                         {attachments.length === 0 && (
                             <button
                                 onClick={() => setIsEditing(true)}
-                                className="flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
-                            >
-                                ✏️ Modifier
+                                className="flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition">
+                                <Icon name="edit" className="w-6 h-6" />
+                                Modifier
+
                             </button>
                         )}
                         <button
                             onClick={() => onDelete(id)}
-                            className="flex items-center gap-1 px-3 py-1 rounded-full bg-red-100 text-red-700 hover:bg-red-200 transition"
-                        >
-                            🗑️ Supprimer
+                            className="flex items-center gap-1 px-3 py-1 rounded-full bg-red-100 text-red-700 hover:bg-red-200 transition">
+                            <Icon name="trash" className="w-6 h-6" />
+                            Supprimer
+
                         </button>
                     </div>
                 )}
@@ -125,8 +108,7 @@ const Message: React.FC<MessageProps> = ({
                                 onEdit(id, editedText)
                                 setIsEditing(false)
                             }}
-                            className="text-green-500 hover:text-green-700 text-sm"
-                        >
+                            className="text-green-500 hover:text-green-700 text-sm">
                             Enregistrer
                         </button>
                         <button
@@ -134,8 +116,7 @@ const Message: React.FC<MessageProps> = ({
                                 setEditedText(content)
                                 setIsEditing(false)
                             }}
-                            className="text-red-500 hover:text-red-700 text-sm"
-                        >
+                            className="text-red-500 hover:text-red-700 text-sm">
                             Annuler
                         </button>
                     </div>

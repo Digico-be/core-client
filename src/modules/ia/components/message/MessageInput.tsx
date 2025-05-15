@@ -6,6 +6,8 @@ import { toast } from 'sonner'
 
 import { useFileUpload } from '../../hooks/useFileUpload'
 
+import { Icon } from '@components/Icon'
+
 import { IAFile } from '../../models/file'
 import { Message } from '../../models/message'
 import { Thread, ThreadMessageContent } from '../../models/thread'
@@ -94,29 +96,28 @@ const MessageInput: React.FC<MessageInputProps> = ({ messages, streamedResponse,
 
     // @ts-ignore
     return (
-        <div className="flex flex-col h-full w-full p-4 overflow-x-hidden">
+        <div
+            className="flex flex-col h-full w-full p-4 overflow-x-hidden custom-scrollbar">
             <div className="flex-1 overflow-y-auto min-h-0">
                 <MessageList
                     messages={[
                         ...messages,
                         ...(streamedResponse
                             ? [
-                                {
-                                    id: 'streaming',
-                                    content: streamedResponse,
-                                    sender: 'assistant' as const,
-                                    timestamp: new Date().toISOString()
-                                }
-                            ]
+                                  {
+                                      id: 'streaming',
+                                      content: streamedResponse,
+                                      sender: 'assistant' as const,
+                                      timestamp: new Date().toISOString()
+                                  }
+                              ]
                             : [])
                     ]}
                     onDeleteMessage={async (id) => {
                         if (thread?.id) await deleteMessage(thread.id, id)
                     }}
                     onEditMessage={async (id, txt) => {
-                        if (thread?.id) {
-                            await editMessage(thread.id, id, txt)
-                        }
+                        if (thread?.id) await editMessage(thread.id, id, txt)
                     }}
                 />
             </div>
@@ -125,17 +126,22 @@ const MessageInput: React.FC<MessageInputProps> = ({ messages, streamedResponse,
                 <FileDropZone onFileDrop={handleFileDrop} onDragStateChange={(dragging) => setIsDragging(dragging)} disabled={!hasThread}>
                     <div
                         className={clsx(
-                            'flex gap-2 mt-4 items-center p-2 rounded-lg transition-all duration-200',
-                            isDragging && 'border-blue-500 bg-blue-50 shadow-md cursor-copy',
+                            'shrink-0 flex items-center w-full bg-white px-4 py-3 rounded-full border border-main/10',
+                            'transition-all duration-200',
+                            isDragging && 'border border-blue bg-blue-50 shadow-md cursor-copy',
                             !hasThread && 'opacity-50 cursor-not-allowed'
-                        )}>
+                        )}
+                        style={{
+                            filter: 'drop-shadow(0px 14px 31px rgba(158, 158, 158, 0.10)) drop-shadow(0px 57px 57px rgba(158, 158, 158, 0.09)) drop-shadow(0px 127px 76px rgba(158, 158, 158, 0.05)) drop-shadow(0px 227px 91px rgba(158, 158, 158, 0.01)) drop-shadow(0px 354px 99px rgba(158, 158, 158, 0.00))'
+                        }}>
                         <button
                             type="button"
                             onClick={() => document.getElementById('fileInput')?.click()}
-                            className="px-3 py-3 rounded-lg bg-grey-200 border border-grey-600"
+                            className="shrink-0 w-20 h-20 rounded-full bg-grey-200 flex items-center justify-center text-xs"
                             disabled={!hasThread || isSending || isLocked}>
-                            📎
+                            <Icon name="upload" className="w-12 h-12" />
                         </button>
+
                         <input
                             type="file"
                             id="fileInput"
@@ -158,16 +164,15 @@ const MessageInput: React.FC<MessageInputProps> = ({ messages, streamedResponse,
                                     handleSend()
                                 }
                             }}
-                            placeholder={hasThread ? 'Posez une question…' : 'Création de la conversation…'}
-                            className="min-w-0 flex-1 p-3 bg-grey-200 border border-grey-600 rounded-lg"
+                            placeholder={hasThread ? 'Posez moi une question' : 'Création de la conversation…'}
+                            className="min-w-0 flex-1 mx-4 bg-transparent focus:outline-none"
                             disabled={!hasThread || isSending || isLocked}
                         />
 
                         {pendingFile && (
-                            <div className="flex items-center gap-2 px-4 py-3 bg-grey-200 border border-grey-600 rounded-lg text-sm text-gray-700">
-                                📎
+                            <div className="w-3/16 flex items-center gap-2 px-6 py-2 bg-grey-200 border border-main/10 rounded-full text-smml-2">
                                 {!compact && <span className="truncate max-w-[200px]">{pendingFile.filename}</span>}
-                                <button type="button" onClick={() => setPendingFile(null)} className="text-red-500 hover:text-red-700 text-xs ml-2">
+                                <button type="button" onClick={() => setPendingFile(null)} className="text-red-500 text-xs ml-2">
                                     ✕
                                 </button>
                             </div>
@@ -177,8 +182,8 @@ const MessageInput: React.FC<MessageInputProps> = ({ messages, streamedResponse,
                             onClick={handleSend}
                             disabled={!hasThread || isSending || isLocked || (userQuery.trim() === '' && !pendingFile)}
                             className={clsx(
-                                'px-4 py-2 rounded-lg text-white transition duration-200 ease-in-out',
-                                !hasThread || isSending || isLocked ? 'bg-grey-800 cursor-not-allowed' : 'bg-primary hover:bg-blue-600'
+                                'shrink-0 px-6 py-2 rounded-full text-white transition duration-200 ease-in-out ml-2',
+                                !hasThread || isSending || isLocked ? 'bg-grey-600 cursor-not-allowed' : 'bg-primary hover:bg-blue-600'
                             )}>
                             {!hasThread ? '…' : isSending || isLocked ? 'Réponse…' : 'Envoyer'}
                         </button>

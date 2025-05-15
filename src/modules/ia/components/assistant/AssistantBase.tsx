@@ -73,7 +73,7 @@ const AssistantBase: React.FC<Props> = ({ module, tabId, type }) => {
     }
 
     return (
-        <div className="bg-white pt-4 flex flex-col flex-1 overflow-hidden">
+        <div className="bg-white pt-4 flex flex-col flex-1 overflow-hidden rounded">
             <div className="flex items-center justify-between px-4 mb-2">
                 <h1 className="text-2xl font-bold text-center mb-4">
                     {assistant.name}
@@ -87,13 +87,13 @@ const AssistantBase: React.FC<Props> = ({ module, tabId, type }) => {
                     <Icon name="tooth" className="size-8 fill-main" />
                 </button>
             </div>
-
+            {/*
             <div className="text-xs text-center mb-6">
                 AssistantId:&nbsp;{assistant.openai_id}
                 <br />
                 ThreadId:&nbsp;{thread.id}
             </div>
-
+            */}
             <MessageInput
                 module={module}
                 assistantId={assistant.openai_id}

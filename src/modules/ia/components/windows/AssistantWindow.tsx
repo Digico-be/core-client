@@ -42,7 +42,7 @@ const AssistantWindow: React.FC = () => {
             </button>
 
             {isOpen && assistant && (
-                <div className="fixed bottom-20 right-6 w-[400px] h-[600px] bg-white border rounded-lg shadow-xl z-50 overflow-hidden flex flex-col px-2">
+                <div className="border-main/10 fixed bottom-20 right-6 w-[90vw] max-w-[400px] h-[80vh] max-h-[600px] bg-white border rounded-lg shadow-xl z-50 overflow-hidden flex flex-col px-2">
                     <ThreadTabsProvider
                         tabId={tabId}
                         module={moduleName}

@@ -14,7 +14,7 @@ export const ThreadSidebar: React.FC = () => {
     } = useThreadTabsContext();
 
     return (
-        <div className="flex flex-col h-full p-4 gap-2 bg-white mr-2">
+        <div className="flex flex-col h-full p-4 gap-2 bg-white mr-2 rounded">
             <h2 className="text-lg font-semibold mb-2">Conversations</h2>
 
             <div className="flex-1 overflow-y-auto flex flex-col gap-2 min-h-0">
@@ -41,7 +41,7 @@ export const ThreadSidebar: React.FC = () => {
             </div>
 
             <button
-                className="mt-4 bg-primary text-white text-sm px-3 py-2 rounded hover:bg-blue-600"
+                className="mt-4 bg-primary text-white text-sm px-3 py-2 rounded-full hover:bg-blue-600"
                 onClick={() => {
                     addThread();
                 }}

@@ -12,6 +12,7 @@
 
     --color-primary: #2f6bff;
 
+    --color-grey-100: #f2f2f2;
     --color-grey-200: #f7f7f7;
     --color-grey-400: #e5e5e5;
     --color-grey-600: #a5a5a5;
@@ -52,6 +53,8 @@
 
     /* Shadow */
     --shadow: 0 0 7px 0 rgba(17, 25, 40, 0.1);
+
+
 }
 
 @layer base {
@@ -72,5 +75,24 @@
         text-rendering: optimizeLegibility;
 
         @apply font-inter text-main text-base;
+    }
+
+    .custom-scrollbar {
+        scroll-behavior: smooth;
+        scrollbar-width: thin; /* Firefox */
+        scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background-color: rgba(0, 0, 0, 0.2);
+        border-radius: 9999px; /* rounded-full */
     }
 }
