@@ -101,13 +101,13 @@ const MessageInput: React.FC<MessageInputProps> = ({ messages, streamedResponse,
                         ...messages,
                         ...(streamedResponse
                             ? [
-                                  {
-                                      id: 'streaming',
-                                      content: streamedResponse,
-                                      sender: 'assistant' as const,
-                                      timestamp: new Date().toISOString()
-                                  }
-                              ]
+                                {
+                                    id: 'streaming',
+                                    content: streamedResponse,
+                                    sender: 'assistant' as const,
+                                    timestamp: new Date().toISOString()
+                                }
+                            ]
                             : [])
                     ]}
                     onDeleteMessage={async (id) => {
@@ -125,14 +125,14 @@ const MessageInput: React.FC<MessageInputProps> = ({ messages, streamedResponse,
                 <FileDropZone onFileDrop={handleFileDrop} onDragStateChange={(dragging) => setIsDragging(dragging)} disabled={!hasThread}>
                     <div
                         className={clsx(
-                            'flex gap-2 mt-4 items-center border p-2 rounded-lg transition-all duration-200',
+                            'flex gap-2 mt-4 items-center p-2 rounded-lg transition-all duration-200',
                             isDragging && 'border-blue-500 bg-blue-50 shadow-md cursor-copy',
                             !hasThread && 'opacity-50 cursor-not-allowed'
                         )}>
                         <button
                             type="button"
                             onClick={() => document.getElementById('fileInput')?.click()}
-                            className="px-3 py-3 rounded-lg border hover:bg-gray-100"
+                            className="px-3 py-3 rounded-lg bg-grey-200 border border-grey-600"
                             disabled={!hasThread || isSending || isLocked}>
                             📎
                         </button>
@@ -159,12 +159,12 @@ const MessageInput: React.FC<MessageInputProps> = ({ messages, streamedResponse,
                                 }
                             }}
                             placeholder={hasThread ? 'Posez une question…' : 'Création de la conversation…'}
-                            className="min-w-0 flex-1 p-3 border rounded-lg"
+                            className="min-w-0 flex-1 p-3 bg-grey-200 border border-grey-600 rounded-lg"
                             disabled={!hasThread || isSending || isLocked}
                         />
 
                         {pendingFile && (
-                            <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border rounded-lg text-sm text-gray-700">
+                            <div className="flex items-center gap-2 px-4 py-3 bg-grey-200 border border-grey-600 rounded-lg text-sm text-gray-700">
                                 📎
                                 {!compact && <span className="truncate max-w-[200px]">{pendingFile.filename}</span>}
                                 <button type="button" onClick={() => setPendingFile(null)} className="text-red-500 hover:text-red-700 text-xs ml-2">
