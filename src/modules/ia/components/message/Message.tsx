@@ -41,6 +41,7 @@ const Message: React.FC<MessageProps> = ({ id, content, sender, timestamp, type 
     const displayContent = link ? `${content}\n\n🔗 [Voir sur la plateforme](${link})` : content
 
     const isTable = isRawGPTTable(displayContent)
+    const [copied, setCopied] = useState(false)
 
     return (
         <div className={`flex ${sender === 'user' ? 'justify-end' : 'justify-start'} px-4`}>
@@ -58,10 +59,27 @@ const Message: React.FC<MessageProps> = ({ id, content, sender, timestamp, type 
                             rows={4}
                         />
                     ) : isTable ? (
-                        <div className="max-w-full overflow-hidden">
-                            <pre className="overflow-x-auto font-mono text-sm whitespace-pre bg-white p-4 rounded border border-gray-300 max-w-full">
-                                {displayContent}
-                            </pre>
+                        <div className="w-full overflow-x-auto rounded-lg border border-grey-400 bg-white shadow-inner relative">
+                            {/* Bandeau d’en-tête */}
+                            <div className="flex items-center justify-between p-3 bg-grey-200 border-b border-gray-300 rounded-t-lg">
+                                <div className="flex items-center gap-2">
+                                    <Icon name="ia" className="w-5 h-5 text-gray-700" />
+                                    <span className="font-semibold text-sm text-gray-800 uppercase tracking-wide">Rapport généré par l’assistant</span>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(displayContent)
+                                        setCopied(true)
+                                        setTimeout(() => setCopied(false), 1500)
+                                    }}
+                                    className="text-xs px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded-full text-gray-700 transition"
+                                    title="Copier le contenu du rapport">
+                                    {copied ? '✅ Copié !' : '📋 Copier'}
+                                </button>
+                            </div>
+
+                            {/* Contenu du rapport */}
+                            <pre className="min-w-full font-mono text-sm text-black p-4 whitespace-pre leading-relaxed overflow-x-auto">{displayContent}</pre>
                         </div>
                     ) : (
                         <ReactMarkdown
@@ -86,7 +104,6 @@ const Message: React.FC<MessageProps> = ({ id, content, sender, timestamp, type 
                                 className="flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition">
                                 <Icon name="edit" className="w-6 h-6" />
                                 Modifier
-
                             </button>
                         )}
                         <button
@@ -94,7 +111,6 @@ const Message: React.FC<MessageProps> = ({ id, content, sender, timestamp, type 
                             className="flex items-center gap-1 px-3 py-1 rounded-full bg-red-100 text-red-700 hover:bg-red-200 transition">
                             <Icon name="trash" className="w-6 h-6" />
                             Supprimer
-
                         </button>
                     </div>
                 )}

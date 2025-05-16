@@ -52,6 +52,10 @@ export const functionsDefinition = [
                         type: "string",
                         description: "Filtrer les contacts par email"
                     },
+                    created_at: {
+                        type: "string",
+                        description: "Filtrer les contacts par date de création (format YYYY-MM-DD)"
+                    }
                 },
             },
             pageLink: (workspace: string, args?: Record<string, any>) =>
