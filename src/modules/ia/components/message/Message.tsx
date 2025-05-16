@@ -5,9 +5,8 @@ import ReactMarkdown from 'react-markdown'
 import rehypeRaw from 'rehype-raw'
 
 import { Icon } from '@components/Icon'
-
 import AttachmentPreview from '../file/AttachmentPreview'
-import ExportReportButton from '../file/ExportReportButton'
+import { ExportReportButton } from '../file/ExportReportButton'
 
 interface Attachment {
     openai_id: string
@@ -28,28 +27,29 @@ interface MessageProps {
     onEdit: (id: string, newContent: string) => void
 }
 
-// 🔍 Détection de tableau GPT brut (Markdown brut bien aligné)
-function isRawGPTTable(content: string): boolean {
-    return content.includes('|') && content.includes('---') && content.includes('\n')
+function isReportContent(content: string): boolean {
+    return (
+        (content.includes('|') && content.includes('---')) ||
+        content.includes('<table') ||
+        content.includes('<h1>Rapport')
+    )
 }
 
 const Message: React.FC<MessageProps> = ({ id, content, sender, timestamp, type = 'text', attachments = [], link, onDelete, onEdit }) => {
     const [isEditing, setIsEditing] = useState(false)
     const [editedText, setEditedText] = useState(content)
+    const [copied, setCopied] = useState(false)
 
-    const formattedTimestamp = timestamp ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '---'
+    const formattedTimestamp = timestamp
+        ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        : '---'
 
     const displayContent = link ? `${content}\n\n🔗 [Voir sur la plateforme](${link})` : content
-
-    const isTable = isRawGPTTable(displayContent)
-    const [copied, setCopied] = useState(false)
+    const isTable = isReportContent(displayContent)
 
     return (
         <div className={`flex ${sender === 'user' ? 'justify-end' : 'justify-start'} px-4`}>
-            <div
-                className={`p-4 ${isTable ? 'w-full max-w-full' : 'max-w-[80%] md:max-w-[900px]'} rounded-lg shadow-md ${
-                    sender === 'user' ? 'bg-blue-100' : 'bg-gray-200'
-                }`}>
+            <div className={`p-4 ${isTable ? 'w-full max-w-full' : 'max-w-[80%] md:max-w-[900px]'} rounded-lg shadow-md ${sender === 'user' ? 'bg-blue-100' : 'bg-gray-200'}`}>
                 <div className="whitespace-pre-wrap mb-2 space-y-2 flex-col">
                     {isEditing ? (
                         <textarea
@@ -68,7 +68,8 @@ const Message: React.FC<MessageProps> = ({ id, content, sender, timestamp, type 
                                     <span className="font-semibold text-sm text-gray-800 uppercase tracking-wide">Rapport généré par l’assistant</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <ExportReportButton content={displayContent} />
+
+                                    <ExportReportButton targetId={`rapport-${id}`} />
                                     <button
                                         onClick={() => {
                                             navigator.clipboard.writeText(displayContent)
@@ -76,15 +77,15 @@ const Message: React.FC<MessageProps> = ({ id, content, sender, timestamp, type 
                                             setTimeout(() => setCopied(false), 1500)
                                         }}
                                         className="text-xs px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded-full text-gray-700 transition"
-                                        title="Copier le contenu du rapport">
+                                        title="Copier le contenu du rapport"
+                                    >
                                         {copied ? '✅ Copié !' : '📋 Copier'}
                                     </button>
                                 </div>
                             </div>
-
-
-                            {/* Contenu du rapport */}
-                            <pre className="min-w-full font-mono text-sm text-black p-4 whitespace-pre leading-relaxed overflow-x-auto">{displayContent}</pre>
+                            <div id={`rapport-${id}`}>
+                                <div dangerouslySetInnerHTML={{ __html: displayContent }} />
+                            </div>
                         </div>
                     ) : (
                         <ReactMarkdown
@@ -95,7 +96,8 @@ const Message: React.FC<MessageProps> = ({ id, content, sender, timestamp, type 
                                         {children}
                                     </a>
                                 )
-                            }}>
+                            }}
+                        >
                             {displayContent}
                         </ReactMarkdown>
                     )}
@@ -106,14 +108,16 @@ const Message: React.FC<MessageProps> = ({ id, content, sender, timestamp, type 
                         {attachments.length === 0 && (
                             <button
                                 onClick={() => setIsEditing(true)}
-                                className="flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition">
+                                className="flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
+                            >
                                 <Icon name="edit" className="w-6 h-6" />
                                 Modifier
                             </button>
                         )}
                         <button
                             onClick={() => onDelete(id)}
-                            className="flex items-center gap-1 px-3 py-1 rounded-full bg-red-100 text-red-700 hover:bg-red-200 transition">
+                            className="flex items-center gap-1 px-3 py-1 rounded-full bg-red-100 text-red-700 hover:bg-red-200 transition"
+                        >
                             <Icon name="trash" className="w-6 h-6" />
                             Supprimer
                         </button>
@@ -129,7 +133,8 @@ const Message: React.FC<MessageProps> = ({ id, content, sender, timestamp, type 
                                 onEdit(id, editedText)
                                 setIsEditing(false)
                             }}
-                            className="text-green-500 hover:text-green-700 text-sm">
+                            className="text-green-500 hover:text-green-700 text-sm"
+                        >
                             Enregistrer
                         </button>
                         <button
@@ -137,7 +142,8 @@ const Message: React.FC<MessageProps> = ({ id, content, sender, timestamp, type 
                                 setEditedText(content)
                                 setIsEditing(false)
                             }}
-                            className="text-red-500 hover:text-red-700 text-sm">
+                            className="text-red-500 hover:text-red-700 text-sm"
+                        >
                             Annuler
                         </button>
                     </div>
