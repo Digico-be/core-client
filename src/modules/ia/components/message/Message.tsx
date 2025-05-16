@@ -7,6 +7,7 @@ import rehypeRaw from 'rehype-raw'
 import { Icon } from '@components/Icon'
 
 import AttachmentPreview from '../file/AttachmentPreview'
+import ExportReportButton from '../file/ExportReportButton'
 
 interface Attachment {
     openai_id: string
@@ -66,17 +67,21 @@ const Message: React.FC<MessageProps> = ({ id, content, sender, timestamp, type 
                                     <Icon name="ia" className="w-5 h-5 text-gray-700" />
                                     <span className="font-semibold text-sm text-gray-800 uppercase tracking-wide">Rapport généré par l’assistant</span>
                                 </div>
-                                <button
-                                    onClick={() => {
-                                        navigator.clipboard.writeText(displayContent)
-                                        setCopied(true)
-                                        setTimeout(() => setCopied(false), 1500)
-                                    }}
-                                    className="text-xs px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded-full text-gray-700 transition"
-                                    title="Copier le contenu du rapport">
-                                    {copied ? '✅ Copié !' : '📋 Copier'}
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    <ExportReportButton content={displayContent} />
+                                    <button
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(displayContent)
+                                            setCopied(true)
+                                            setTimeout(() => setCopied(false), 1500)
+                                        }}
+                                        className="text-xs px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded-full text-gray-700 transition"
+                                        title="Copier le contenu du rapport">
+                                        {copied ? '✅ Copié !' : '📋 Copier'}
+                                    </button>
+                                </div>
                             </div>
+
 
                             {/* Contenu du rapport */}
                             <pre className="min-w-full font-mono text-sm text-black p-4 whitespace-pre leading-relaxed overflow-x-auto">{displayContent}</pre>

@@ -109,8 +109,8 @@ Structure du rapport si demandé :
 5. ## Points d’attention 🔎
 
 Contraintes strictes pour le tableau :
-• Utilise le format brut Markdown (avec \`|\`, \`-\`, padding fixe, pas de HTML)
-• Affiche ⌀ pour les champs vides
+• Utilise le HTML
+• Affiche '/' pour les champs vides
 • Aucune reformulation ni tri
 • Respecte strictement les noms et l’ordre des colonnes
 
@@ -154,9 +154,8 @@ Affiche un tableau **complet et brut** en Markdown avec ces colonnes :
 ⚠️ Contraintes strictes :
 • Même si une valeur est absente/null, elle doit apparaître sous forme “⌀” (ne jamais omettre de cellule)  
 • Le tableau doit être **parfaitement aligné** : utilise des espaces manuels pour le padding  
-• Utilise \`|\` pour séparer les colonnes et \`-\` pour le header  
 • Ne jamais reformuler, trier, filtrer ou interpréter les données  
-• Pas de balises HTML : Markdown brut uniquement
+• Balises HTML
 
 5. ## Points d’attention 🔎  
 Liste des observations importantes, comme :  
